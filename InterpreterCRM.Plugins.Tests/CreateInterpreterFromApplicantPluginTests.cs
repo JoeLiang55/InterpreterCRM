@@ -13,6 +13,38 @@ namespace InterpreterCRM.Plugins.Tests
     public sealed class CreateInterpreterFromApplicantPluginTests
     {
         [Fact]
+        public void DataverseSchemaUsesVerifiedLogicalNamesAndApiContract()
+        {
+            Assert.Equal("gsic_CreateInterpreterFromApplicant", DataverseSchema.CreateInterpreterMessage);
+            Assert.Equal("Target", DataverseSchema.TargetParameter);
+            Assert.Equal("InterpreterId", DataverseSchema.InterpreterIdResponse);
+
+            Assert.Equal("gsic_applicant", DataverseSchema.Applicant.Table);
+            Assert.Equal("gsic_applicantname", DataverseSchema.Applicant.Name);
+            Assert.Equal("gsic_emailaddress", DataverseSchema.Applicant.Email);
+            Assert.Equal("gsic_applicationstatus", DataverseSchema.Applicant.ApplicationStatus);
+            Assert.Equal(472540001, DataverseSchema.Applicant.ScreeningCompleted);
+            Assert.Equal("gsic_phone", DataverseSchema.Applicant.Phone);
+            Assert.Equal("gsic_address", DataverseSchema.Applicant.Address);
+            Assert.Equal("gsic_city", DataverseSchema.Applicant.City);
+            Assert.Equal("gsic_province", DataverseSchema.Applicant.Province);
+            Assert.Equal("gsic_postalcode", DataverseSchema.Applicant.PostalCode);
+            Assert.Equal("gsic_country", DataverseSchema.Applicant.Country);
+            Assert.Equal("gsic_courtregion", DataverseSchema.Applicant.CourtRegion);
+            Assert.Equal("gsic_interpreter", DataverseSchema.Applicant.Interpreter);
+            Assert.Equal("gsic_archiveapplication", DataverseSchema.Applicant.ArchiveApplication);
+
+            Assert.Equal("gsic_interpreter", DataverseSchema.Interpreter.Table);
+            Assert.Equal("gsic_name", DataverseSchema.Interpreter.Name);
+            Assert.Equal("gsic_phone", DataverseSchema.Interpreter.Phone);
+            Assert.Equal("gsic_address", DataverseSchema.Interpreter.Address);
+            Assert.Equal("gsic_region", DataverseSchema.Interpreter.Region);
+            Assert.Equal(2, DataverseSchema.OptionalTextMappings.Count);
+            Assert.Equal(DataverseSchema.Interpreter.Phone, DataverseSchema.OptionalTextMappings[DataverseSchema.Applicant.Phone]);
+            Assert.Equal(DataverseSchema.Interpreter.Address, DataverseSchema.OptionalTextMappings[DataverseSchema.Applicant.Address]);
+        }
+
+        [Fact]
         public void ValidApplicantCreatesExactlyOneInterpreter()
         {
             var test = new Harness();
@@ -24,23 +56,42 @@ namespace InterpreterCRM.Plugins.Tests
         }
 
         [Fact]
-        public void CopiesNamesAndEveryConfiguredOptionalTextField()
+        public void CopiesApplicantNameOptionalTextFieldsAndCourtRegion()
         {
             var test = new Harness();
-            test.Applicant[DataverseSchema.Applicant.FirstName] = "  Ada ";
-            test.Applicant[DataverseSchema.Applicant.Name] = "Application reference, not a person";
+            test.Applicant[DataverseSchema.Applicant.Name] = "  Ada Lovelace  ";
             foreach (var mapping in DataverseSchema.OptionalTextMappings)
                 test.Applicant[mapping.Key] = "Value for " + mapping.Key;
+            test.Applicant[DataverseSchema.Applicant.CourtRegion] = new OptionSetValue(472540002);
 
             test.Run();
             var created = Assert.Single(test.Created);
-            Assert.Equal("Ada", created[DataverseSchema.Interpreter.FirstName]);
-            Assert.Equal("Lovelace", created[DataverseSchema.Interpreter.LastName]);
             Assert.Equal("Ada Lovelace", created[DataverseSchema.Interpreter.Name]);
             foreach (var mapping in DataverseSchema.OptionalTextMappings)
                 Assert.Equal(test.Applicant[mapping.Key], created[mapping.Value]);
-            Assert.Equal(3 + DataverseSchema.OptionalTextMappings.Count, created.Attributes.Count);
-            Assert.False(created.Contains(DataverseSchema.Interpreter.Region));
+            Assert.Equal(new OptionSetValue(472540002), created.GetAttributeValue<OptionSetValue>(DataverseSchema.Interpreter.Region));
+            Assert.Equal(2 + DataverseSchema.OptionalTextMappings.Count, created.Attributes.Count);
+        }
+
+        [Theory]
+        [InlineData(472540000)]
+        [InlineData(472540001)]
+        [InlineData(472540002)]
+        [InlineData(472540003)]
+        public void CopiesCourtRegionChoiceValueDirectly(int optionValue)
+        {
+            var test = new Harness();
+            test.Applicant[DataverseSchema.Applicant.CourtRegion] = new OptionSetValue(optionValue);
+            test.Run();
+            Assert.Equal(optionValue, Assert.Single(test.Created).GetAttributeValue<OptionSetValue>(DataverseSchema.Interpreter.Region).Value);
+        }
+
+        [Fact]
+        public void MissingCourtRegionDoesNotWriteInterpreterRegion()
+        {
+            var test = new Harness();
+            test.Run();
+            Assert.False(Assert.Single(test.Created).Contains(DataverseSchema.Interpreter.Region));
         }
 
         [Fact]
@@ -74,7 +125,7 @@ namespace InterpreterCRM.Plugins.Tests
         {
             var test = new Harness();
             test.Applicant[DataverseSchema.Applicant.Interpreter] = new EntityReference(DataverseSchema.Interpreter.Table, Guid.NewGuid());
-            test.Applicant.Attributes.Remove(DataverseSchema.Applicant.FirstName);
+            test.Applicant.Attributes.Remove(DataverseSchema.Applicant.Name);
             var exception = Assert.Throws<InvalidPluginExecutionException>(test.Run);
             Assert.Equal("An Interpreter profile has already been created for this applicant.", exception.Message);
             test.VerifyNoWrites();
@@ -92,18 +143,24 @@ namespace InterpreterCRM.Plugins.Tests
         }
 
         [Theory]
-        [InlineData(true, null)]
-        [InlineData(true, "")]
-        [InlineData(true, "  ")]
-        [InlineData(false, null)]
-        [InlineData(false, "")]
-        [InlineData(false, "  ")]
-        public void MissingRequiredNameRejectsBeforeCreation(bool firstName, string value)
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public void MissingRequiredNameRejectsBeforeCreation(string value)
         {
             var test = new Harness();
-            test.Applicant[firstName ? DataverseSchema.Applicant.FirstName : DataverseSchema.Applicant.LastName] = value;
+            test.Applicant[DataverseSchema.Applicant.Name] = value;
             var exception = Assert.Throws<InvalidPluginExecutionException>(test.Run);
-            Assert.Contains("First Name and Last Name are required", exception.Message);
+            Assert.Contains("Applicant Name is required", exception.Message);
+            test.VerifyNoWrites();
+        }
+
+        [Fact]
+        public void AbsentApplicantNameRejectsBeforeCreation()
+        {
+            var test = new Harness();
+            test.Applicant.Attributes.Remove(DataverseSchema.Applicant.Name);
+            Assert.Contains("Applicant Name is required", Assert.Throws<InvalidPluginExecutionException>(test.Run).Message);
             test.VerifyNoWrites();
         }
 
@@ -115,7 +172,7 @@ namespace InterpreterCRM.Plugins.Tests
             Assert.False(test.RetrievedColumns.AllColumns);
             var expected = DataverseSchema.OptionalTextMappings.Keys.Concat(new[]
             {
-                DataverseSchema.Applicant.FirstName, DataverseSchema.Applicant.LastName,
+                DataverseSchema.Applicant.Name, DataverseSchema.Applicant.CourtRegion,
                 DataverseSchema.Applicant.Interpreter, DataverseSchema.Applicant.ArchiveApplication
             }).OrderBy(column => column);
             Assert.Equal(expected, test.RetrievedColumns.Columns.OrderBy(column => column));
@@ -179,7 +236,7 @@ namespace InterpreterCRM.Plugins.Tests
         public void IncompatibleTextFieldRejectsBeforeCreation()
         {
             var test = new Harness();
-            test.Applicant[DataverseSchema.Applicant.Email] = new OptionSetValue(1); // Test-only incompatible type.
+            test.Applicant[DataverseSchema.Applicant.Phone] = new OptionSetValue(1); // Test-only incompatible type.
             Assert.Contains("text column", Assert.Throws<InvalidPluginExecutionException>(test.Run).Message);
             test.VerifyNoWrites();
         }
@@ -188,10 +245,10 @@ namespace InterpreterCRM.Plugins.Tests
         public void BlankOptionalValuesAreNotWritten()
         {
             var test = new Harness();
-            test.Applicant[DataverseSchema.Applicant.Email] = "  ";
+            test.Applicant[DataverseSchema.Applicant.Address] = "  ";
             test.Applicant[DataverseSchema.Applicant.Phone] = null;
             test.Run();
-            Assert.Equal(3, Assert.Single(test.Created).Attributes.Count);
+            Assert.Single(Assert.Single(test.Created).Attributes);
         }
 
         [Fact]
@@ -211,9 +268,9 @@ namespace InterpreterCRM.Plugins.Tests
         public void ValidationFailureIsTraced()
         {
             var test = new Harness();
-            test.Applicant[DataverseSchema.Applicant.LastName] = null;
+            test.Applicant[DataverseSchema.Applicant.Name] = null;
             Assert.Throws<InvalidPluginExecutionException>(test.Run);
-            Assert.Contains(test.Traces, trace => trace.Contains("Conversion rejected:") && trace.Contains("Last Name"));
+            Assert.Contains(test.Traces, trace => trace.Contains("Conversion rejected:") && trace.Contains("Applicant Name"));
         }
 
         [Fact]
@@ -282,8 +339,7 @@ namespace InterpreterCRM.Plugins.Tests
             public Entity Applicant { get; } = new Entity(DataverseSchema.Applicant.Table, Guid.NewGuid())
             {
                 RowVersion = "123",
-                [DataverseSchema.Applicant.FirstName] = "Ada",
-                [DataverseSchema.Applicant.LastName] = "Lovelace"
+                [DataverseSchema.Applicant.Name] = "Ada Lovelace"
             };
             public Guid InterpreterId { get; } = Guid.NewGuid();
             public Mock<IOrganizationService> Service { get; } = new Mock<IOrganizationService>(MockBehavior.Strict);

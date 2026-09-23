@@ -9,19 +9,19 @@ All C# schema placeholders live in `InterpreterCRM.Plugins/DataverseSchema.cs`. 
 | Metadata | Required verification |
 | --- | --- |
 | Publisher prefix | Used in the new Custom API unique name |
-| Applicant and Interpreter tables | Actual logical names |
-| Applicant First Name, Last Name | Logical names and text types; initial required input |
-| Interpreter First Name, Last Name, Name | Logical names, text types, lengths, and create/write support |
-| Applicant Interpreter lookup | Logical name; target must include Interpreter |
-| Applicant Archive Application | Logical name; must be Boolean/Two Options |
-| Email and Phone, both tables | Logical names and compatible text types/lengths |
-| Address on both tables | Corresponding line 1/2/3, city, state/province, postal code, country columns where present; remove nonexistent mappings |
-| Applicant Name | Only needed if enabling `CopyApplicantName`; confirm it is a full personal name |
-| Court Region and Interpreter Region | Logical names and data types; shared lookup target or verified Choice mapping before enabling copying |
+| Applicant and Interpreter tables | Actual logical names; do not infer Applicant's table name from `gsic_ApplicantId` |
+| Applicant Name | Verified `gsic_ApplicantName`, Single line of text; required input |
+| Interpreter Name | Actual logical name, text type, length, and create/write support; target for Applicant Name |
+| Applicant Interpreter lookup | Verified `gsic_Interpreter`; target must include Interpreter |
+| Applicant Archive Application | Verified `gsic_ArchiveApplication`, Yes/No |
+| Applicant Email Address and Phone | Verified `gsic_EmailAddress` (Email) and `gsic_Phone` (Phone number) |
+| Applicant address | Verified `gsic_Address`, `gsic_City`, `gsic_Province`, `gsic_PostalCode`, `gsic_Country`, all Single line of text |
+| Corresponding Interpreter fields | Actual email, phone, address, city, province, postal code, and country logical names; verify compatibility or remove optional mappings |
+| Court Region and Interpreter Region | Applicant `gsic_CourtRegion` is Choice; determine Interpreter Region type and Choice semantics before enabling copying |
 | Applicant concurrency | `IsOptimisticConcurrencyEnabled = true`; Retrieve must return RowVersion |
 | Other required Interpreter fields | Confirm whether table rules require more than the proposed name fields |
 
-Primary key column names are not needed in this SDK implementation: it uses `EntityReference.Id` and `Entity.Id`. Application Status/Choice values and Interpreter Language metadata are not needed for the current operation because it does not access them. For later BPF-specific visibility, identify Profile Creation's actual stage ID rather than hard-coding an invented one. For direct HTTP calls, obtain the Applicant entity-set name from metadata; do not guess its pluralization.
+The verified Applicant primary ID is `gsic_ApplicantId`. Primary key column names are not needed in this SDK implementation: it uses `EntityReference.Id` and `Entity.Id`. The verified but unused Applicant columns `gsic_ApplicationStatus`, `gsic_AppliedLanguage`, `gsic_DateReceived`, and `gsic_ModesofAppearance` do not participate in conversion. Their values and Interpreter Language metadata are not needed for the current operation. For later BPF-specific visibility, identify Profile Creation's actual stage ID rather than hard-coding an invented one. For direct HTTP calls, obtain the Applicant entity-set name from metadata; do not guess its pluralization.
 
 ## Local tooling inventory (verified 2026-09-22)
 
