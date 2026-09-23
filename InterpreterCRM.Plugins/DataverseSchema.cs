@@ -53,6 +53,48 @@ namespace InterpreterCRM.Plugins
             public static readonly Guid ProfileCreationStage = new Guid("5b35d1de-a8cc-4daa-bd37-4733f917e587");
         }
 
+        public static class TestResult
+        {
+            public const string Table = "gsic_testresult";
+            public const string InterpreterLanguage = "gsic_interpreterlanguage";
+            public const string SightTranslationScore = "gsic_sighttranslationscore";
+            public const string ConsecutiveInterpretingScore = "gsic_consecutiveinterpretingscore";
+            public const string SimultaneousInterpretingScore = "gsic_simultaneousinterpretingscore";
+            public const string OralRecallScore = "gsic_oralrecallscore";
+            public const string ConsecutiveDialogScore = "gsic_consecutivedialogscore";
+            public const string ShadowingScore = "gsic_shadowingscore";
+            public const string SightConsecutiveScore = "gsic_sightconsecutivescore";
+            public const string PreImageAlias = "TestResultPreImage";
+            public const string PostImageAlias = "TestResultPostImage";
+
+            public static readonly string[] ComponentScores =
+            {
+                SightTranslationScore, ConsecutiveInterpretingScore, SimultaneousInterpretingScore,
+                OralRecallScore, ConsecutiveDialogScore, ShadowingScore, SightConsecutiveScore
+            };
+        }
+
+        public static class InterpreterLanguage
+        {
+            public const string Table = "gsic_interpreterlanguage";
+            public const string LanguageCategory = "gsic_languagecategory";
+            public const string AccreditationStatus = "gsic_accreditationstatus";
+            public const string SightTranslationScore = "gsic_sighttranslationscore";
+            public const string ConsecutiveInterpretingScore = "gsic_consecutiveinterpretingscore";
+            public const string SimultaneousInterpretingScore = "gsic_simultaneousinterpretingscore";
+            public const string OralRecallScore = "gsic_oralrecallscore";
+            public const string ConsecutiveDialogScore = "gsic_consecutivedialogscore";
+            public const string ShadowingScore = "gsic_shadowingscore";
+            public const string SightConsecutiveScore = "gsic_sightconsecutivescore";
+
+            public const int Bilingual = 472540000;
+            public const int English = 472540001;
+            public const int FirstNation = 472540002;
+            public const int Accredited = 472540000;
+            public const int ConditionalAccredited = 472540001;
+            public const int Unaccredited = 472540002;
+        }
+
         // Only verified compatible text destinations are mapped here. Court Region is copied separately as a Choice.
         public static IReadOnlyDictionary<string, string> OptionalTextMappings { get; } =
             new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(
