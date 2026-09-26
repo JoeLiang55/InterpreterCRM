@@ -1,11 +1,12 @@
 (function (global) {
     "use strict";
 
-    const INTERPRETER_COLUMN_NAME = "gsic_interpreter";
+    const INTERPRETER_PROFILE_COLUMN_NAME = "gsic_interpreterprofile";
     const INTERPRETER_LANGUAGE_COLUMN_NAME = "gsic_interpreterlanguage";
     const LANGUAGE_TYPE_COLUMN_NAME = "gsic_languagetype";
     const INTERPRETER_LANGUAGE_TABLE_NAME = "gsic_interpreterlanguage";
-    const INTERPRETER_LANGUAGE_ID_COLUMN_NAME = "gsic_interpreterlanguageid";
+    // FetchXML uses the lookup's logical name, not its capitalized schema name.
+    const INTERPRETER_LANGUAGE_INTERPRETER_COLUMN_NAME = "gsic_interpreter";
     const LANGUAGE_CATEGORY_COLUMN_NAME = "gsic_languagecategory";
 
     const requestVersions = new WeakMap();
@@ -48,7 +49,7 @@
             return;
         }
 
-        const hasInterpreter = !!normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_COLUMN_NAME)));
+        const hasInterpreter = !!normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_PROFILE_COLUMN_NAME)));
         languageAttribute.controls.forEach(function (control) {
             control.setDisabled(!hasInterpreter);
         });
@@ -81,12 +82,12 @@
             return;
         }
 
-        const interpreterId = normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_COLUMN_NAME)));
+        const interpreterId = normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_PROFILE_COLUMN_NAME)));
         function isCurrentRequest() {
             try {
                 return requestVersions.get(languageAttribute) === requestVersion &&
                     normalizedId(selectedLookup(languageAttribute)) === languageId &&
-                    normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_COLUMN_NAME))) === interpreterId;
+                    normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_PROFILE_COLUMN_NAME))) === interpreterId;
             } catch (error) {
                 // The user may have navigated away before the request finished.
                 return false;
@@ -125,11 +126,28 @@
         try {
             const formContext = executionContext.getFormContext();
             const control = executionContext.getEventSource();
-            const interpreterId = normalizedId(selectedLookup(formContext.getAttribute(INTERPRETER_COLUMN_NAME)));
-            const filter = interpreterId
-                ? "<filter type='and'><condition attribute='" + INTERPRETER_COLUMN_NAME + "' operator='eq' value='" + interpreterId + "' /></filter>"
-                : "<filter type='and'><condition attribute='" + INTERPRETER_LANGUAGE_ID_COLUMN_NAME + "' operator='null' /></filter>";
+            const interpreter = selectedLookup(formContext.getAttribute(INTERPRETER_PROFILE_COLUMN_NAME));
+            const interpreterId = normalizedId(interpreter);
 
+            // The lookup is disabled without an Interpreter. Do not add a no-match filter:
+            // Dataverse combines custom filters with AND, so it can exclude later selections.
+            if (!interpreterId) {
+                control.setDisabled(true);
+                console.debug("[GSIC.EventAttendeeForm] Interpreter Language filter skipped: no valid Interpreter ID.", {
+                    selectedInterpreterId: interpreter && interpreter.id
+                });
+                return;
+            }
+
+            const filter = "<filter type='and'><condition attribute='" +
+                INTERPRETER_LANGUAGE_INTERPRETER_COLUMN_NAME + "' operator='eq' value='" +
+                interpreterId + "' /></filter>";
+
+            console.debug("[GSIC.EventAttendeeForm] Interpreter Language lookup filter", {
+                interpreterId: interpreterId,
+                filterXml: filter,
+                entityLogicalName: INTERPRETER_LANGUAGE_TABLE_NAME
+            });
             control.addCustomFilter(filter, INTERPRETER_LANGUAGE_TABLE_NAME);
         } catch (error) {
             logError("Could not filter the Interpreter Language lookup.", error);
@@ -139,7 +157,7 @@
     EventAttendeeForm.onLoad = function (executionContext) {
         try {
             const formContext = executionContext.getFormContext();
-            const interpreterAttribute = formContext.getAttribute(INTERPRETER_COLUMN_NAME);
+            const interpreterAttribute = formContext.getAttribute(INTERPRETER_PROFILE_COLUMN_NAME);
             const languageAttribute = formContext.getAttribute(INTERPRETER_LANGUAGE_COLUMN_NAME);
             const languageTypeAttribute = formContext.getAttribute(LANGUAGE_TYPE_COLUMN_NAME);
 
