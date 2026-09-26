@@ -16,11 +16,12 @@ The following values were manually verified on the `gsic_interpreterlanguage` ta
 
 ## Event Attendee form
 
-The following Event Attendee form column names were supplied as authoritative for the form script. The Event Attendee table logical name was not supplied.
+The following Event Attendee columns were manually verified. The Event Attendee table logical name was not supplied.
 
 | Item | Verified value |
 | --- | --- |
-| Interpreter lookup | `gsic_Interpreter` |
+| Interpreter Profile lookup to `gsic_interpreter` | `gsic_InterpreterProfile` |
+| Old/incorrect Interpreter lookup to Interpreter Language (do not use in the form script) | `gsic_Interpreter` |
 | Interpreter Language lookup | `gsic_InterpreterLanguage` |
 | Language Type | `gsic_LanguageType` |
 
