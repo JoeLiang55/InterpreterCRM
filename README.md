@@ -22,6 +22,23 @@ The plug-in output is `InterpreterCRM.Plugins/bin/Release/net48/InterpreterCRM.P
 
 `InterpreterCRM.Plugins.snk` is a generated development strong-name key, included to make local builds reproducible. It is an assembly identity, not an environment credential or an Authenticode certificate. Decide on the production signing identity before the first registration, then preserve it for updates. `tools/New-SigningKey.ps1` generates a key only when absent and refuses to overwrite one. It uses ephemeral Windows cryptographic storage because `sn.exe -k` returned Access Denied on this machine. Microsoft's [assembly guidance](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/build-and-package) requires signing for individual assembly registration; the SDK assemblies are already provided by Dataverse and are not uploaded with this DLL.
 
+## CI
+
+[GitHub Actions](.github/workflows/ci.yml) runs on every push and pull request. On Windows, it builds both projects in `InterpreterCRM.sln` in Release configuration, runs the existing C# unit tests, and checks every JavaScript web resource under `JavascriptFormValidation` with `node --check`. Any failed check fails CI. JavaScript validation checks syntax only; there are no npm or PCF projects to build.
+
+The workflow only validates code. It does not deploy, authenticate to Dataverse, require Dataverse secrets, or perform Dataverse solution operations.
+
+To run the same checks locally, use Windows with the .NET 10 SDK, .NET Framework 4.8 (or 4.8.1), and Node.js 24. From the repository root in PowerShell, run the two commands in **Build and test** above, followed by:
+
+```powershell
+Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.js -File -Recurse | ForEach-Object {
+    node --check $_.FullName
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+
+The build restores the projects' existing NuGet dependencies. No npm install is needed, and generated build and test output is already excluded by `.gitignore`.
+
 ## Conversion behavior and assumptions
 
 The only entry point is an Applicant-bound Custom API Action, at main-operation stage 30. It must execute synchronously inside a Dataverse transaction. There is no Applicant Update/Status step or automated BPF trigger.
