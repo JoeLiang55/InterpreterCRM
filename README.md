@@ -6,6 +6,7 @@ Local implementation of an explicit Applicant-to-Interpreter conversion. No Data
 
 - `InterpreterCRM.Plugins`: signed .NET Framework 4.8 assembly; Microsoft.CrmSdk.CoreAssemblies 9.0.2.60; stateless `IPlugin` implementation with no custom runtime dependencies.
 - `InterpreterCRM.Plugins.Tests`: .NET Framework 4.8, xUnit 2.9.3, Moq 4.20.72, Microsoft.NET.Test.Sdk 17.14.1, xunit.runner.visualstudio 2.8.2. Tests execute the real entry point with mocked Dataverse services and context.
+- `DataverseSchema`: standalone Complaint metadata setup tool using ServiceClient, with additive rerun checks. See [Complaint schema setup](DataverseSchema/README.md) for configuration, the full schema, and manual Power Apps steps. Building/testing does not connect to Dataverse.
 
 Microsoft's current [framework guidance](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/supported-customizations#support-for-net-framework-versions) supports .NET Framework 4.8 for plug-ins and recommends it for new development. SDK reference assemblies come from NuGet. The installed .NET SDK builds the projects; Windows with .NET Framework runs the tests.
 
