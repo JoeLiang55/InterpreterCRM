@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Build solution
+        run: dotnet build InterpreterCRM.sln --configuration Release --nologo
+
+      - name: Run unit tests
+        run: dotnet test InterpreterCRM.sln --configuration Release --no-build --no-restore --nologo --logger 'trx;LogFileName=InterpreterCRM.Tests.trx'
+
+      - name: Check JavaScript syntax
+        run: |
+          Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.js -File -Recurse | ForEach-Object {
+              node --check $_.FullName
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
