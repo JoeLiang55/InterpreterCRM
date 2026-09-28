@@ -25,9 +25,9 @@ The plug-in output is `InterpreterCRM.Plugins/bin/Release/net48/InterpreterCRM.P
 
 ## CI
 
-[GitHub Actions](.github/workflows/ci.yml) runs on every push and pull request. On Windows, it builds both projects in `InterpreterCRM.sln` in Release configuration, runs the existing C# unit tests, and checks every JavaScript web resource under `JavascriptFormValidation` with `node --check`. Any failed check fails CI. JavaScript validation checks syntax only; there are no npm or PCF projects to build.
+[GitHub Actions](.github/workflows/ci.yml) runs on every push and pull request. On Windows, it builds both projects in `InterpreterCRM.sln` in Release configuration, runs the existing C# unit tests, checks every JavaScript web resource under `JavascriptFormValidation` with `node --check`, and runs the JavaScript form tests. Any failed check fails CI. There are no npm or PCF projects to build.
 
-The workflow only validates code. It does not deploy, authenticate to Dataverse, require Dataverse secrets, or perform Dataverse solution operations.
+The workflow validates code and runs the JavaScript form tests. It does not deploy, authenticate to Dataverse, require Dataverse secrets, or perform Dataverse solution operations.
 
 To run the same checks locally, use Windows with the .NET 10 SDK, .NET Framework 4.8 (or 4.8.1), and Node.js 24. From the repository root in PowerShell, run the two commands in **Build and test** above, followed by:
 
@@ -36,9 +36,21 @@ Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.js -File -Recurse 
     node --check $_.FullName
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
+Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.test.js -File -Recurse | ForEach-Object {
+    node --test $_.FullName
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 ```
 
 The build restores the projects' existing NuGet dependencies. No npm install is needed, and generated build and test output is already excluded by `.gitignore`.
+
+## Add to Registry command
+
+Add `JavascriptFormValidation/gsic_InterpreterForm.js` as the JavaScript web resource `gsic_InterpreterForm.js`. On the **Interpreter Main Form** command bar, add a JavaScript action with library `gsic_InterpreterForm.js`, function `GSIC.InterpreterForm.addToRegistry`, and one parameter: **CRM Parameter → PrimaryControl**. Do not pass the form execution context or a custom string parameter. No form OnLoad handler or Form Libraries registration is required for this command action.
+
+Include the `gsic_inregistry` (In Registry) and `gsic_registrydateadded` (Registry Date Added) columns on the form so the command can read and set them. They may be hidden. The command requires a saved record, ignores one already marked In Registry, sets today's local Date Only value, saves, refreshes, and shows a dialog. It performs no eligibility checks or Registry removal.
+
+Run `node --test JavascriptFormValidation/gsic_InterpreterForm.test.js` for the command's local mock tests.
 
 ## Conversion behavior and assumptions
 

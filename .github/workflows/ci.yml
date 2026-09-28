@@ -42,3 +42,10 @@ jobs:
               node --check $_.FullName
               if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
+
+      - name: Run JavaScript tests
+        run: |
+          Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.test.js -File -Recurse | ForEach-Object {
+              node --test $_.FullName
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }

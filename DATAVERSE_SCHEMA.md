@@ -26,3 +26,12 @@ The following Event Attendee columns were manually verified. The Event Attendee 
 | Language Type | `gsic_LanguageType` |
 
 The Interpreter Language lookup targets `gsic_interpreterlanguage`. Its `gsic_Interpreter` lookup links each language to an Interpreter, and its `gsic_LanguageCategory` Choice supplies the Event Attendee Language Type value.
+
+## Interpreter Registry fields
+
+The Interpreter Registry fields were verified on the `gsic_interpreter` table.
+
+| Item | Verified logical name | Type |
+| --- | --- | --- |
+| In Registry | `gsic_inregistry` | Yes/No |
+| Registry Date Added | `gsic_registrydateadded` | Date Only |
