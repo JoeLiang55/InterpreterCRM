@@ -43,6 +43,12 @@ function setup(options = {}) {
             }
         }
     };
+    const primaryControl = {
+        getFormContext() {
+            calls.push("getFormContext");
+            return formContext;
+        }
+    };
     const sandbox = {
         window: {
             Xrm: { Navigation: { openAlertDialog({ text }) { calls.push(["dialog", text]); return Promise.resolve(); } } }
@@ -52,12 +58,12 @@ function setup(options = {}) {
     };
     const script = fs.readFileSync(path.join(__dirname, "gsic_InterpreterForm.js"), "utf8");
     vm.runInNewContext(script, sandbox, { filename: "gsic_InterpreterForm.js" });
-    return { fields, calls, errors, formContext, addToRegistry: sandbox.window.GSIC.InterpreterForm.addToRegistry };
+    return { fields, calls, errors, formContext, primaryControl, addToRegistry: sandbox.window.GSIC.InterpreterForm.addToRegistry };
 }
 
-test("saved Interpreter is added with today's local Date Only value, then saved and refreshed", async () => {
-    const { fields, calls, formContext, addToRegistry } = setup();
-    await addToRegistry(formContext);
+test("saved Interpreter through PrimaryControl is added with today's local Date Only value, then saved and refreshed", async () => {
+    const { fields, calls, primaryControl, addToRegistry } = setup();
+    await addToRegistry(primaryControl);
 
     assert.equal(fields.gsic_inregistry.getValue(), true);
     const date = fields.gsic_registrydateadded.getValue();
@@ -66,15 +72,22 @@ test("saved Interpreter is added with today's local Date Only value, then saved 
     assert.equal(date.getDate(), 28);
     assert.equal(date.getHours(), 0);
     assert.equal(date.getMinutes(), 0);
+    assert.deepEqual(calls, ["getFormContext", "save", ["refresh", false], ["dialog", "Interpreter added to the Registry."]]);
+});
+
+test("PrimaryControl supplied as the form context also adds a saved Interpreter", async () => {
+    const { fields, calls, formContext, addToRegistry } = setup();
+    await addToRegistry(formContext);
+    assert.equal(fields.gsic_inregistry.getValue(), true);
     assert.deepEqual(calls, ["save", ["refresh", false], ["dialog", "Interpreter added to the Registry."]]);
 });
 
-test("unsaved Interpreter shows a message without changing or saving anything", async () => {
-    const { fields, calls, formContext, addToRegistry } = setup({ id: "" });
-    await addToRegistry(formContext);
+test("unsaved Interpreter through PrimaryControl shows a message without changing or saving anything", async () => {
+    const { fields, calls, primaryControl, addToRegistry } = setup({ id: "" });
+    await addToRegistry(primaryControl);
     assert.equal(fields.gsic_inregistry.getValue(), false);
     assert.equal(fields.gsic_registrydateadded.getValue(), null);
-    assert.deepEqual(calls, [["dialog", "Save this Interpreter record before adding it to the Registry."]]);
+    assert.deepEqual(calls, ["getFormContext", ["dialog", "Save this Interpreter record before adding it to the Registry."]]);
 });
 
 test("create form is treated as unsaved even if it exposes an ID", async () => {
@@ -83,12 +96,12 @@ test("create form is treated as unsaved even if it exposes an ID", async () => {
     assert.deepEqual(calls, [["dialog", "Save this Interpreter record before adding it to the Registry."]]);
 });
 
-test("already registered Interpreter does nothing", async () => {
+test("already registered Interpreter through PrimaryControl does nothing", async () => {
     const existingDate = new Date(2025, 3, 2);
-    const { fields, calls, formContext, addToRegistry } = setup({ inRegistry: true, dateAdded: existingDate });
-    await addToRegistry(formContext);
+    const { fields, calls, primaryControl, addToRegistry } = setup({ inRegistry: true, dateAdded: existingDate });
+    await addToRegistry(primaryControl);
     assert.equal(fields.gsic_registrydateadded.getValue(), existingDate);
-    assert.deepEqual(calls, [["dialog", "This Interpreter is already in the Registry."]]);
+    assert.deepEqual(calls, ["getFormContext", ["dialog", "This Interpreter is already in the Registry."]]);
 });
 
 test("save failure restores Registry values and reports the error", async () => {

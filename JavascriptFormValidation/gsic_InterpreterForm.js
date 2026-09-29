@@ -33,7 +33,12 @@
 
         try {
             formContext = primaryControl;
+            if ((!formContext || typeof formContext.getAttribute !== "function" || !formContext.data) &&
+                primaryControl && typeof primaryControl.getFormContext === "function") {
+                formContext = primaryControl.getFormContext();
+            }
             if (!formContext || !formContext.data || !formContext.data.entity ||
+                typeof formContext.data.entity.getId !== "function" ||
                 !formContext.data.entity.getId() ||
                 (formContext.ui && formContext.ui.getFormType && formContext.ui.getFormType() === 1)) {
                 await showMessage("Save this Interpreter record before adding it to the Registry.");
