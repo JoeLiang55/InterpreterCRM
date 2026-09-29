@@ -4,6 +4,14 @@
     // Verified Interpreter logical names (see DATAVERSE_SCHEMA.md).
     const IN_REGISTRY_COLUMN_NAME = "gsic_inregistry";
     const REGISTRY_DATE_ADDED_COLUMN_NAME = "gsic_registrydateadded";
+    const DEPENDENCIES = Object.freeze([
+        ["gsic_consenttosharequalification", "gsic_dateconsentprovided"],
+        ["gsic_accessibilitycoursecompleted", "gsic_accessibilitytrainingdetails"],
+        ["gsic_securityclearance", "gsic_clearancedate"],
+        ["gsic_testpreparation", "gsic_testpreparationdate"],
+        ["gsic_training", "gsic_trainingdate"],
+        ["gsic_retraining", "gsic_retrainingdate"]
+    ]);
     const pendingForms = new WeakSet();
 
     const GSIC = global.GSIC = global.GSIC || {};
@@ -11,6 +19,96 @@
 
     function logError(message, error) {
         console.error("[GSIC.InterpreterForm] " + message, error || "");
+    }
+
+    function updateDependentControl(formContext, controllerName, dependentName) {
+        const controller = formContext.getAttribute(controllerName);
+        const dependent = formContext.getAttribute(dependentName);
+        if (!dependent || !dependent.controls || typeof dependent.controls.forEach !== "function") {
+            return;
+        }
+
+        const disabled = !controller || typeof controller.getValue !== "function" || controller.getValue() !== true;
+        dependent.controls.forEach(function (control) {
+            if (control && typeof control.setDisabled === "function") {
+                control.setDisabled(disabled);
+            }
+        });
+    }
+
+    function updateDependentControls(formContext) {
+        DEPENDENCIES.forEach(function (pair) {
+            updateDependentControl(formContext, pair[0], pair[1]);
+        });
+    }
+
+    function onControllerChange(executionContext) {
+        try {
+            const formContext = executionContext && executionContext.getFormContext();
+            if (formContext && typeof formContext.getAttribute === "function") {
+                updateDependentControls(formContext);
+            }
+        } catch (error) {
+            logError("Could not update Interpreter qualification fields.", error);
+        }
+    }
+
+    InterpreterForm.onLoad = function (executionContext) {
+        try {
+            const formContext = executionContext && executionContext.getFormContext();
+            if (!formContext || typeof formContext.getAttribute !== "function") {
+                return;
+            }
+
+            DEPENDENCIES.forEach(function (pair) {
+                const controller = formContext.getAttribute(pair[0]);
+                if (controller && typeof controller.addOnChange === "function") {
+                    if (typeof controller.removeOnChange === "function") {
+                        controller.removeOnChange(onControllerChange);
+                    }
+                    controller.addOnChange(onControllerChange);
+                }
+            });
+            updateDependentControls(formContext);
+        } catch (error) {
+            logError("Could not initialize Interpreter qualification fields.", error);
+        }
+    };
+
+    // Temporary: remove after the command bar's runtime PrimaryControl shape is confirmed.
+    function logPrimaryControlDiagnostics(primaryControl, argumentCount) {
+        try {
+            const type = typeof primaryControl;
+            const isObject = primaryControl !== null && (type === "object" || type === "function");
+            const relevantProperties = new Set();
+            let current = isObject ? primaryControl : null;
+            while (current && current !== Object.prototype) {
+                for (const name of Object.getOwnPropertyNames(current)) {
+                    if (/data|entity|form|attribute|context|control|id|save|refresh|ui/i.test(name)) {
+                        relevantProperties.add(name);
+                    }
+                }
+                current = Object.getPrototypeOf(current);
+            }
+
+            const data = isObject ? primaryControl.data : undefined;
+            const entity = data && data.entity;
+            console.log("[GSIC.InterpreterForm] PrimaryControl received (expand in DevTools):", primaryControl);
+            console.log("[GSIC.InterpreterForm] PrimaryControl snapshot:", {
+                argumentCount,
+                type,
+                relevantProperties: Array.from(relevantProperties).sort(),
+                dataExists: data != null,
+                entityExists: entity != null,
+                getFormContext: isObject ? typeof primaryControl.getFormContext : "undefined",
+                getAttribute: isObject ? typeof primaryControl.getAttribute : "undefined",
+                entityGetId: entity ? typeof entity.getId : "undefined",
+                dataSave: data ? typeof data.save : "undefined",
+                dataRefresh: data ? typeof data.refresh : "undefined"
+            });
+        } catch (error) {
+            logError("Could not inspect the PrimaryControl argument.", error);
+        }
     }
 
     async function showMessage(message) {
@@ -22,6 +120,7 @@
     }
 
     InterpreterForm.addToRegistry = async function (primaryControl) {
+        logPrimaryControlDiagnostics(primaryControl, arguments.length);
         let formContext;
         let inRegistry;
         let dateAdded;
@@ -37,9 +136,12 @@
                 primaryControl && typeof primaryControl.getFormContext === "function") {
                 formContext = primaryControl.getFormContext();
             }
-            if (!formContext || !formContext.data || !formContext.data.entity ||
-                typeof formContext.data.entity.getId !== "function" ||
-                !formContext.data.entity.getId() ||
+            if (!formContext || typeof formContext.getAttribute !== "function" || !formContext.data ||
+                !formContext.data.entity || typeof formContext.data.entity.getId !== "function") {
+                throw new Error("Interpreter form context is unavailable. Pass PrimaryControl to this command.");
+            }
+            const recordId = formContext.data.entity.getId();
+            if (!recordId ||
                 (formContext.ui && formContext.ui.getFormType && formContext.ui.getFormType() === 1)) {
                 await showMessage("Save this Interpreter record before adding it to the Registry.");
                 return;
