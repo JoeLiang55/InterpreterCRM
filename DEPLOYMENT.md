@@ -10,7 +10,8 @@ All C# schema placeholders live in `InterpreterCRM.Plugins/DataverseSchema.cs`. 
 | --- | --- |
 | Publisher prefix | Used in the new Custom API unique name |
 | Applicant and Interpreter tables | Actual logical names; do not infer Applicant's table name from `gsic_ApplicantId` |
-| Applicant Name | Verified `gsic_ApplicantName`, Single line of text; required input |
+| Applicant Name | Verified primary-name schema `gsic_ApplicantName` (logical name `gsic_applicantname`), Single line of text |
+| Applicant First Name and Last Name | Add text columns `gsic_firstname` and `gsic_lastname`; keep Applicant Name as the primary-name column |
 | Interpreter Name | Actual logical name, text type, length, and create/write support; target for Applicant Name |
 | Applicant Interpreter lookup | Verified `gsic_Interpreter`; target must include Interpreter |
 | Applicant Archive Application | Verified `gsic_ArchiveApplication`, Yes/No |
@@ -77,6 +78,12 @@ The Custom API is a solution metadata component. Create its record with the cont
 Create an Applicant main-form JavaScript command named **Create Interpreter**, passing `PrimaryControl`. Save pending edits before invoking the API so the server sees the current Applicant. Disable the command while it is in flight; require a saved row and an empty Interpreter lookup. Show it at Profile Creation if desired, using verified BPF metadata. Client visibility does not replace server validation or permissions.
 
 The web resource will construct a request for `Xrm.WebApi.online.execute` using the verified API unique name, with `operationType: 0` (Action), `boundParameter: "entity"`, and a bound entity parameter of `typeName: "mscrm." + applicantLogicalName`, `structuralProperty: 5`. Its entity value contains the saved Applicant ID and logical name. These numeric values belong to the documented Client API, not business Choice fields. Read the Guid `InterpreterId` response, refresh the Applicant form/command state, and optionally open that Interpreter record. Display the server's error message and re-enable the command on failure; do not automatically retry a failed or ambiguous response.
+
+## Applicant name form and view configuration
+
+Add `gsic_firstname` and `gsic_lastname` as Single line of text columns on Applicant. Keep the existing primary-name column `gsic_ApplicantName` (`gsic_applicantname`). Add `JavascriptFormValidation/gsic_ApplicantForm.js` to the solution as the `gsic_ApplicantForm.js` JavaScript web resource and add it to the Applicant main form's libraries. Register Form On Load as `GSIC.ApplicantForm.onLoad` and pass the execution context. The script attaches OnChange handlers to First Name and Last Name and disables Applicant Name controls; no separate field-event registrations are needed. It joins trimmed, nonblank parts with one space. It does not recalculate on form load, preserving an existing Applicant Name on legacy rows until either name field changes.
+
+In the Active Applicants view, place Applicant Name immediately after Application Reference Number and preserve the existing remaining columns and filters. The Applicant form and Active Applicants view definitions are not present in this repository, so those two component edits must be made in the target Dataverse solution.
 
 Equivalent HTTP shape (metavariables below must be resolved from verified metadata):
 

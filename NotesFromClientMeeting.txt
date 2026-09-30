@@ -1,0 +1,8 @@
+default = to be screened 
+26-0010 Applicant Reference Number
+FNAME - LNAME Required
+Title - Required
+Contact Information Section - All Required - need either 1 filled in
+Multiple Languages You can pick many langauges for an applicant - Other Languages - First Nations - Bilingual 
+If nothing in the subgrid hide for interpreter, client prefer a popup
+Accediation Status - For Test Results
