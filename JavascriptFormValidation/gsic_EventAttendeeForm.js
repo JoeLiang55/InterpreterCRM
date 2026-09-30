@@ -8,6 +8,9 @@
     // FetchXML uses the lookup's logical name, not its capitalized schema name.
     const INTERPRETER_LANGUAGE_INTERPRETER_COLUMN_NAME = "gsic_interpreter";
     const LANGUAGE_CATEGORY_COLUMN_NAME = "gsic_languagecategory";
+    const CONFIRMED_COLUMN_NAME = "gsic_confirmed";
+    const CONFIRMATION_METHOD_COLUMN_NAME = "gsic_confirmationmethod";
+    const CONFIRMATION_DATE_COLUMN_NAME = "gsic_confirmationdate";
 
     const requestVersions = new WeakMap();
     const GSIC = global.GSIC = global.GSIC || {};
@@ -53,6 +56,24 @@
         languageAttribute.controls.forEach(function (control) {
             control.setDisabled(!hasInterpreter);
         });
+    }
+
+    function setAttributeDisabled(formContext, columnName, disabled) {
+        const attribute = formContext.getAttribute(columnName);
+        if (attribute && attribute.controls && typeof attribute.controls.forEach === "function") {
+            attribute.controls.forEach(function (control) {
+                if (control && typeof control.setDisabled === "function") {
+                    control.setDisabled(disabled);
+                }
+            });
+        }
+    }
+
+    function updateConfirmationAvailability(formContext) {
+        const confirmedAttribute = formContext.getAttribute(CONFIRMED_COLUMN_NAME);
+        const enabled = !!(confirmedAttribute && confirmedAttribute.getValue() === true);
+        setAttributeDisabled(formContext, CONFIRMATION_METHOD_COLUMN_NAME, !enabled);
+        setAttributeDisabled(formContext, CONFIRMATION_DATE_COLUMN_NAME, !enabled);
     }
 
     function refreshLanguageType(formContext, clearBeforeRetrieval) {
@@ -192,6 +213,13 @@
             if (languageAttribute) {
                 refreshLanguageType(formContext, false);
             }
+
+            const confirmedAttribute = formContext.getAttribute(CONFIRMED_COLUMN_NAME);
+            if (confirmedAttribute) {
+                confirmedAttribute.removeOnChange(EventAttendeeForm.onConfirmedChange);
+                confirmedAttribute.addOnChange(EventAttendeeForm.onConfirmedChange);
+            }
+            updateConfirmationAvailability(formContext);
         } catch (error) {
             logError("Could not initialize the Event Attendee form.", error);
         }
@@ -221,6 +249,14 @@
             refreshLanguageType(executionContext.getFormContext(), true);
         } catch (error) {
             logError("Could not update Language Type after Interpreter Language changed.", error);
+        }
+    };
+
+    EventAttendeeForm.onConfirmedChange = function (executionContext) {
+        try {
+            updateConfirmationAvailability(executionContext.getFormContext());
+        } catch (error) {
+            logError("Could not update confirmation controls after Confirmed changed.", error);
         }
     };
 })(window);
