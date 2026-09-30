@@ -9,7 +9,19 @@ The Applicant primary-name schema name is recorded as `gsic_ApplicantName` in th
 | First Name | `gsic_firstname` | `gsic_firstname` | Single line of text |
 | Last Name | `gsic_lastname` | `gsic_lastname` | Single line of text |
 
-`Applicant Name` remains the primary-name column. The Applicant form web resource in `JavascriptFormValidation/gsic_ApplicantForm.js` combines the trimmed nonblank name parts into that column on either field's change and disables its form controls. This repository does not contain the Applicant form or Active Applicants view definition, so those app components still need to be updated in the Dataverse solution as described in `DEPLOYMENT.md`.
+`Applicant Name` remains the primary-name column. The Applicant form web resource in `JavascriptFormValidation/gsic_ApplicantForm.js` combines the trimmed nonblank name parts into that column on form load and on either field's change, and disables its form controls. This repository does not contain the Applicant form or Active Applicants view definition, so those app components still need to be updated in the Dataverse solution as described in `DEPLOYMENT.md`.
+
+## Applicant language choices
+
+The following logical names and types were checked against live CustomerService Trial Dataverse metadata using the Power Platform CLI model builder on 2026-09-30.
+
+| Display name | Logical name | Type |
+| --- | --- | --- |
+| Languages Applied For | `gsic_languagesappliedfor` | Multi-select Choice |
+| Other Languages | `gsic_otherlanguages` | Multi-select Choice |
+| First Nations Languages | `gsic_firstnationslanguages` | Multi-select Choice |
+
+The separate `gsic_appliedlanguage` column is a single Choice and is not used by the conversion. Interpreter Language uses `gsic_languagename` (primary name), `gsic_interpreter` (Interpreter lookup), `gsic_languagecategory` (Choice), and `gsic_languagecode` (Choice). The Language Code choices currently cover English, French, Mandarin Chinese, Cantonese, Spanish, Vietnamese, and Korean; other selected languages have no corresponding code and leave it empty. Conversion resolves labels from the published choice metadata, suppresses duplicate names, and maps English to category 472540001, First Nations selections to 472540002, and all other selections to 472540000.
 
 ## Interpreter Language
 

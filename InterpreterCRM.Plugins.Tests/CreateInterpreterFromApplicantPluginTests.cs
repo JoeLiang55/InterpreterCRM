@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
 using Moq;
@@ -33,12 +34,19 @@ namespace InterpreterCRM.Plugins.Tests
             Assert.Equal("gsic_courtregion", DataverseSchema.Applicant.CourtRegion);
             Assert.Equal("gsic_interpreter", DataverseSchema.Applicant.Interpreter);
             Assert.Equal("gsic_archiveapplication", DataverseSchema.Applicant.ArchiveApplication);
+            Assert.Equal("gsic_languagesappliedfor", DataverseSchema.Applicant.LanguagesAppliedFor);
+            Assert.Equal("gsic_otherlanguages", DataverseSchema.Applicant.OtherLanguages);
+            Assert.Equal("gsic_firstnationslanguages", DataverseSchema.Applicant.FirstNationsLanguages);
 
             Assert.Equal("gsic_interpreter", DataverseSchema.Interpreter.Table);
             Assert.Equal("gsic_name", DataverseSchema.Interpreter.Name);
             Assert.Equal("gsic_phone", DataverseSchema.Interpreter.Phone);
             Assert.Equal("gsic_address", DataverseSchema.Interpreter.Address);
             Assert.Equal("gsic_region", DataverseSchema.Interpreter.Region);
+            Assert.Equal("gsic_interpreterlanguage", DataverseSchema.InterpreterLanguage.Table);
+            Assert.Equal("gsic_interpreter", DataverseSchema.InterpreterLanguage.Interpreter);
+            Assert.Equal("gsic_languagename", DataverseSchema.InterpreterLanguage.LanguageName);
+            Assert.Equal("gsic_languagecode", DataverseSchema.InterpreterLanguage.LanguageCode);
             Assert.Equal(2, DataverseSchema.OptionalTextMappings.Count);
             Assert.Equal(DataverseSchema.Interpreter.Phone, DataverseSchema.OptionalTextMappings[DataverseSchema.Applicant.Phone]);
             Assert.Equal(DataverseSchema.Interpreter.Address, DataverseSchema.OptionalTextMappings[DataverseSchema.Applicant.Address]);
@@ -92,6 +100,95 @@ namespace InterpreterCRM.Plugins.Tests
             var test = new Harness();
             test.Run();
             Assert.False(Assert.Single(test.Created).Contains(DataverseSchema.Interpreter.Region));
+        }
+
+        [Fact]
+        public void MultipleSelectionsFromEveryApplicantLanguageFieldCreateRelatedLanguages()
+        {
+            var test = new Harness();
+            test.Select(DataverseSchema.Applicant.LanguagesAppliedFor, 472540000, 472540002);
+            test.Select(DataverseSchema.Applicant.OtherLanguages, 472540000, 472540001);
+            test.Select(DataverseSchema.Applicant.FirstNationsLanguages, 472540000, 472540001);
+
+            test.Run();
+
+            var languages = test.Created.Where(entity => entity.LogicalName == DataverseSchema.InterpreterLanguage.Table).ToList();
+            Assert.Equal(6, languages.Count);
+            AssertLanguage(languages, "English", DataverseSchema.InterpreterLanguage.English, 472540000, test.InterpreterId);
+            AssertLanguage(languages, "Mandarin Chinese", DataverseSchema.InterpreterLanguage.Bilingual, 472540002, test.InterpreterId);
+            AssertLanguage(languages, "Yiddish", DataverseSchema.InterpreterLanguage.Bilingual, null, test.InterpreterId);
+            AssertLanguage(languages, "Yoruba", DataverseSchema.InterpreterLanguage.Bilingual, null, test.InterpreterId);
+            AssertLanguage(languages, "Cree", DataverseSchema.InterpreterLanguage.FirstNation, null, test.InterpreterId);
+            AssertLanguage(languages, "Ojibwe", DataverseSchema.InterpreterLanguage.FirstNation, null, test.InterpreterId);
+            Assert.Single(test.Created, entity => entity.LogicalName == DataverseSchema.Interpreter.Table);
+            Assert.Single(test.Updates);
+        }
+
+        [Fact]
+        public void DuplicateLanguageAcrossApplicantFieldsCreatesOneInterpreterLanguage()
+        {
+            var test = new Harness();
+            test.Select(DataverseSchema.Applicant.LanguagesAppliedFor, 472540005);
+            test.Select(DataverseSchema.Applicant.OtherLanguages, 472540003);
+
+            test.Run();
+
+            var language = Assert.Single(test.Created, entity => entity.LogicalName == DataverseSchema.InterpreterLanguage.Table);
+            Assert.Equal("Vietnamese", language[DataverseSchema.InterpreterLanguage.LanguageName]);
+            Assert.Equal(DataverseSchema.InterpreterLanguage.Bilingual,
+                language.GetAttributeValue<OptionSetValue>(DataverseSchema.InterpreterLanguage.LanguageCategory).Value);
+            Assert.Equal(472540005, language.GetAttributeValue<OptionSetValue>(DataverseSchema.InterpreterLanguage.LanguageCode).Value);
+        }
+
+        [Fact]
+        public void MissingOptionalLanguageFieldsStillConvertEveryAppliedLanguage()
+        {
+            var test = new Harness();
+            test.Select(DataverseSchema.Applicant.LanguagesAppliedFor, 472540000, 472540002);
+
+            test.Run();
+
+            var languages = test.Created.Where(entity => entity.LogicalName == DataverseSchema.InterpreterLanguage.Table).ToList();
+            Assert.Equal(2, languages.Count);
+            AssertLanguage(languages, "English", DataverseSchema.InterpreterLanguage.English, 472540000, test.InterpreterId);
+            AssertLanguage(languages, "Mandarin Chinese", DataverseSchema.InterpreterLanguage.Bilingual, 472540002, test.InterpreterId);
+        }
+
+        [Fact]
+        public void UnknownSelectedLanguageOptionRejectsBeforeCreatingInterpreter()
+        {
+            var test = new Harness();
+            test.Select(DataverseSchema.Applicant.OtherLanguages, 999999999);
+            Assert.Contains("published label", Assert.Throws<InvalidPluginExecutionException>(test.Run).Message);
+            test.VerifyNoWrites();
+        }
+
+        [Fact]
+        public void LanguageCreateFailureDoesNotLinkApplicantOrReturnSuccess()
+        {
+            var test = new Harness();
+            test.Select(DataverseSchema.Applicant.LanguagesAppliedFor, 472540000);
+            test.Service.Setup(service => service.Create(It.Is<Entity>(entity =>
+                entity.LogicalName == DataverseSchema.InterpreterLanguage.Table)))
+                .Throws(new InvalidOperationException("Simulated language create failure"));
+
+            Assert.Throws<InvalidPluginExecutionException>(test.Run);
+            Assert.Single(test.Created, entity => entity.LogicalName == DataverseSchema.Interpreter.Table);
+            Assert.Empty(test.Updates);
+            Assert.Empty(test.Output);
+        }
+
+        private static void AssertLanguage(
+            IEnumerable<Entity> languages, string name, int category, int? code, Guid interpreterId)
+        {
+            var language = Assert.Single(languages, entity =>
+                entity.GetAttributeValue<string>(DataverseSchema.InterpreterLanguage.LanguageName) == name);
+            Assert.Equal(category, language.GetAttributeValue<OptionSetValue>(DataverseSchema.InterpreterLanguage.LanguageCategory).Value);
+            Assert.Equal(interpreterId, language.GetAttributeValue<EntityReference>(DataverseSchema.InterpreterLanguage.Interpreter).Id);
+            if (code.HasValue)
+                Assert.Equal(code.Value, language.GetAttributeValue<OptionSetValue>(DataverseSchema.InterpreterLanguage.LanguageCode).Value);
+            else
+                Assert.False(language.Contains(DataverseSchema.InterpreterLanguage.LanguageCode));
         }
 
         [Fact]
@@ -173,7 +270,9 @@ namespace InterpreterCRM.Plugins.Tests
             var expected = DataverseSchema.OptionalTextMappings.Keys.Concat(new[]
             {
                 DataverseSchema.Applicant.Name, DataverseSchema.Applicant.CourtRegion,
-                DataverseSchema.Applicant.Interpreter, DataverseSchema.Applicant.ArchiveApplication
+                DataverseSchema.Applicant.Interpreter, DataverseSchema.Applicant.ArchiveApplication,
+                DataverseSchema.Applicant.LanguagesAppliedFor, DataverseSchema.Applicant.OtherLanguages,
+                DataverseSchema.Applicant.FirstNationsLanguages
             }).OrderBy(column => column);
             Assert.Equal(expected, test.RetrievedColumns.Columns.OrderBy(column => column));
             test.Service.Verify(service => service.RetrieveMultiple(It.IsAny<QueryBase>()), Times.Never);
@@ -382,10 +481,19 @@ namespace InterpreterCRM.Plugins.Tests
                         return retrieved;
                     });
                 Service.Setup(service => service.Create(It.IsAny<Entity>()))
-                    .Callback<Entity>(entity => Created.Add(entity)).Returns(InterpreterId);
+                    .Callback<Entity>(entity => Created.Add(entity))
+                    .Returns<Entity>(entity => entity.LogicalName == DataverseSchema.Interpreter.Table
+                        ? InterpreterId : Guid.NewGuid());
                 Service.Setup(service => service.Execute(It.IsAny<OrganizationRequest>()))
                     .Returns<OrganizationRequest>(request =>
                     {
+                        if (request is RetrieveAttributeRequest retrieve)
+                        {
+                            var metadata = CreateAttributeMetadata(retrieve);
+                            var response = new RetrieveAttributeResponse();
+                            response.Results["AttributeMetadata"] = metadata;
+                            return response;
+                        }
                         var update = Assert.IsType<UpdateRequest>(request);
                         Updates.Add(update);
                         foreach (var field in update.Target.Attributes) Applicant[field.Key] = field.Value;
@@ -394,7 +502,49 @@ namespace InterpreterCRM.Plugins.Tests
                     });
             }
 
+            private static AttributeMetadata CreateAttributeMetadata(RetrieveAttributeRequest request)
+            {
+                var column = request.LogicalName;
+                if (request.EntityLogicalName == DataverseSchema.Applicant.Table)
+                {
+                    var metadata = new MultiSelectPicklistAttributeMetadata { OptionSet = new OptionSetMetadata() };
+                    if (column == DataverseSchema.Applicant.LanguagesAppliedFor)
+                        AddOptions(metadata.OptionSet, (472540000, "English"), (472540002, "Mandarin Chinese"),
+                            (472540005, "Vietnamese"));
+                    else if (column == DataverseSchema.Applicant.OtherLanguages)
+                        AddOptions(metadata.OptionSet, (472540000, "Yiddish"), (472540001, "Yoruba"),
+                            (472540003, "Vietnamese"));
+                    else if (column == DataverseSchema.Applicant.FirstNationsLanguages)
+                        AddOptions(metadata.OptionSet, (472540000, "Cree"), (472540001, "Ojibwe"));
+                    else
+                        throw new InvalidOperationException("Unexpected Applicant choice metadata request: " + column);
+                    return metadata;
+                }
+
+                if (request.EntityLogicalName == DataverseSchema.InterpreterLanguage.Table &&
+                    column == DataverseSchema.InterpreterLanguage.LanguageCode)
+                {
+                    var metadata = new PicklistAttributeMetadata { OptionSet = new OptionSetMetadata() };
+                    AddOptions(metadata.OptionSet, (472540000, "English"), (472540002, "Mandarin Chinese"),
+                        (472540005, "Vietnamese"));
+                    return metadata;
+                }
+
+                throw new InvalidOperationException("Unexpected choice metadata request: " + request.EntityLogicalName + "." + column);
+            }
+
+            private static void AddOptions(OptionSetMetadata optionSet, params (int Value, string Name)[] options)
+            {
+                foreach (var option in options)
+                    optionSet.Options.Add(new OptionMetadata(new Label(option.Name, 1033), option.Value));
+            }
+
             public void Run() => new CreateInterpreterFromApplicantPlugin().Execute(provider.Object);
+
+            public void Select(string column, params int[] values)
+            {
+                Applicant[column] = new OptionSetValueCollection(values.Select(value => new OptionSetValue(value)).ToList());
+            }
 
             public void VerifyNoWrites()
             {
@@ -402,7 +552,7 @@ namespace InterpreterCRM.Plugins.Tests
                 Assert.Empty(Updates);
                 Assert.Empty(Output);
                 Service.Verify(service => service.Create(It.IsAny<Entity>()), Times.Never);
-                Service.Verify(service => service.Execute(It.IsAny<OrganizationRequest>()), Times.Never);
+                Service.Verify(service => service.Execute(It.IsAny<UpdateRequest>()), Times.Never);
                 Service.Verify(service => service.Update(It.IsAny<Entity>()), Times.Never);
             }
         }

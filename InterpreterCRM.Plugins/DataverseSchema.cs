@@ -27,6 +27,9 @@ namespace InterpreterCRM.Plugins
             public const string Interpreter = "gsic_interpreter";
             public const string ArchiveApplication = "gsic_archiveapplication";
             public const string ApplicationStatus = "gsic_applicationstatus";
+            public const string LanguagesAppliedFor = "gsic_languagesappliedfor";
+            public const string OtherLanguages = "gsic_otherlanguages";
+            public const string FirstNationsLanguages = "gsic_firstnationslanguages";
             public const int ToBeScreened = 472540000;
             public const int ScreeningCompleted = 472540001;
         }
@@ -77,6 +80,9 @@ namespace InterpreterCRM.Plugins
         public static class InterpreterLanguage
         {
             public const string Table = "gsic_interpreterlanguage";
+            public const string Interpreter = "gsic_interpreter";
+            public const string LanguageName = "gsic_languagename";
+            public const string LanguageCode = "gsic_languagecode";
             public const string LanguageCategory = "gsic_languagecategory";
             public const string AccreditationStatus = "gsic_accreditationstatus";
             public const string SightTranslationScore = "gsic_sighttranslationscore";
