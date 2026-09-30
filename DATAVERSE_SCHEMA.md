@@ -1,5 +1,16 @@
 # Verified Dataverse schema
 
+## Applicant name fields
+
+The Applicant primary-name schema name is recorded as `gsic_ApplicantName` in the verified conversion metadata and deployment notes; its logical name used by Dataverse APIs and form JavaScript is `gsic_applicantname`. The split-name fields requested for addition are:
+
+| Display name | Schema name | Logical name | Type |
+| --- | --- | --- | --- |
+| First Name | `gsic_firstname` | `gsic_firstname` | Single line of text |
+| Last Name | `gsic_lastname` | `gsic_lastname` | Single line of text |
+
+`Applicant Name` remains the primary-name column. The Applicant form web resource in `JavascriptFormValidation/gsic_ApplicantForm.js` combines the trimmed nonblank name parts into that column on either field's change and disables its form controls. This repository does not contain the Applicant form or Active Applicants view definition, so those app components still need to be updated in the Dataverse solution as described in `DEPLOYMENT.md`.
+
 ## Interpreter Language
 
 The following values were manually verified on the `gsic_interpreterlanguage` table's Columns page in Dataverse. The names and casing below are authoritative.
@@ -16,7 +27,7 @@ The following values were manually verified on the `gsic_interpreterlanguage` ta
 
 ## Event Attendee form
 
-The following Event Attendee columns were manually verified. The Event Attendee table logical name was not supplied.
+The Event Attendee table logical name is `gsic_eventattendee`. The existing lookup names below were manually verified. The confirmation and testing columns below were checked against live CustomerService Trial Dataverse metadata on 2026-09-29 using the Power Platform CLI model builder and attribute metadata.
 
 | Item | Verified value |
 | --- | --- |
@@ -24,6 +35,16 @@ The following Event Attendee columns were manually verified. The Event Attendee 
 | Old/incorrect Interpreter lookup to Interpreter Language (do not use in the form script) | `gsic_Interpreter` |
 | Interpreter Language lookup | `gsic_InterpreterLanguage` |
 | Language Type | `gsic_LanguageType` |
+
+| Display name | Logical name | Dataverse type |
+| --- | --- | --- |
+| Confirmed | `gsic_confirmed` | Yes/No (Boolean) |
+| Attended | `gsic_attended` | Yes/No (Boolean) |
+| Comments | `gsic_comments` | Text (string) |
+| Test Portions Required | `gsic_testportionsrequired` | Multiple lines of text (Memo) |
+| Test Version | `gsic_testversion` | Single line of text (String) |
+| Confirmation Method | `gsic_confirmationmethod` | Choice (Picklist) |
+| Confirmation Date | `gsic_confirmationdate` | Date and time (DateTime; display format not verified) |
 
 The Interpreter Language lookup targets `gsic_interpreterlanguage`. Its `gsic_Interpreter` lookup links each language to an Interpreter, and its `gsic_LanguageCategory` Choice supplies the Event Attendee Language Type value.
 
