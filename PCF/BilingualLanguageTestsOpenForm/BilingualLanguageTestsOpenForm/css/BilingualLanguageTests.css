@@ -14,3 +14,7 @@
 .gsic-language-tests .gsic-tests { min-width: 900px; margin: 8px 0; }
 .gsic-language-tests .gsic-error { color: #a4262c; }
 .gsic-language-tests .gsic-message { color: #616161; }
+.gsic-language-tests .gsic-diagnostics { margin: 8px 0; }
+.gsic-language-tests .gsic-build-marker { margin: 0 0 8px; font-size: 12px; color: #424242; overflow-wrap: anywhere; user-select: text; }
+.gsic-language-tests .gsic-diagnostics summary { cursor: pointer; overflow-wrap: anywhere; }
+.gsic-language-tests .gsic-diagnostics pre { max-height: 300px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }

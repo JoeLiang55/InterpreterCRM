@@ -93,7 +93,7 @@ persistence and cannot certify deployed Dataverse forms or browser behavior.
    Language subgrid as **Only related records** through the Interpreter lookup.
    Do not configure an all-records language view. The parent form must be a saved
    `gsic_interpreter` record.
-3. Set the related view filter **Language Category = Bilingual (472540000)**. Include
+3. Reuse the published related Bilingual view and verify its GUID, since two views share the name Bilingual View. Its existing filter is **Language Category = Bilingual (472540000)**; do not reapply it for the reported error. Include
    `gsic_languagename`, `gsic_languagecategory`, and `gsic_interpreter` in its dataset
    columns. Other parent columns such as best scores can remain in the view and
    are displayed by the PCF. The category and Interpreter columns are used for
@@ -186,3 +186,9 @@ access to `window.Xrm`, or an `openForm` main-form promise assumed to signal Sav
 - [Create-mode dialog and completion result](https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/clientapi/reference/xrm-navigation/navigateto)
 - [Dataset refresh API](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/reference/dataset)
 - [Dataset lookup EntityReference format](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/reference/entityreference)
+
+## Bound-view diagnostics
+
+Control version 0.1.2 adds actual bound-view identification and row-value diagnostics while preserving the host-event navigation flow. The production build and all 35 local tests pass. See [the investigation and diagnostic steps](BILINGUAL_VIEW_DIAGNOSTICS.md); the saved view filter is not required to appear in the runtime dataset filter.
+
+The visible marker is `GSIC.BilingualLanguageTests | v0.1.2 | build EVT-20261001-01`. This control is separate from the openForm control imported through the openForm wrapper. See [loaded-component and solution-layer investigation](BILINGUAL_PCF_LOADED_COMPONENT.md).

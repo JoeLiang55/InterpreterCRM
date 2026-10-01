@@ -1,6 +1,6 @@
 {
   "name": "gsic-bilingual-language-tests-openform-prototype",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Dataset PCF prototype for related bilingual language test history.",
   "scripts": {

@@ -306,7 +306,7 @@ test('collapse and destroy invalidate pending requests; destroy removes only own
 
 test('view configuration fails closed for wrong category, missing columns or multiple Interpreters', () => {
     const english = setup({ [A]: record(A, P, 472540001) });
-    assert.match(english.container.textContent, /Language Category = Bilingual/);
+    assert.match(english.container.textContent, /expected Bilingual/);
     assert.equal(english.calls.length, 0);
     const mixed = setup({ [A]: record(A), [B]: record(B, Q) });
     assert.match(mixed.container.textContent, /different Interpreter/);

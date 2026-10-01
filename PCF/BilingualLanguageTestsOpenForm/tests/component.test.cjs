@@ -162,7 +162,7 @@ test('collapse and destroy ignore pending completions and preserve host DOM', as
 
 test('wrong parent/category, missing view columns and unsaved parent never display language data', () => {
     const other = setup({ [A]: record(A, Q) }); assert.match(other.container.textContent, /different Interpreter/);
-    const english = setup({ [A]: record(A, P, 472540001) }); assert.match(english.container.textContent, /Language Category = Bilingual/);
+    const english = setup({ [A]: record(A, P, 472540001) }); assert.match(english.container.textContent, /expected Bilingual/);
     const missing = setup(); missing.context.parameters.languages.columns.pop(); missing.component.updateView(missing.context);
     assert.match(missing.container.textContent, /must include/);
     const unsaved = setup(); unsaved.context.parameters.interpreterId.raw = null; unsaved.component.updateView(unsaved.context);

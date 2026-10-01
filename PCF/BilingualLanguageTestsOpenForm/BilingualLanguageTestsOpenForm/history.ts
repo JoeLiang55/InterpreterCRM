@@ -33,6 +33,19 @@ export function guid(value: string): string {
     return id;
 }
 
+export function interpreterReferenceId(value: unknown): string {
+    const references = Array.isArray(value) ? value : [value];
+    if (references.length !== 1 || !references[0] || typeof references[0] !== "object") {
+        throw new Error("Every language must belong to a saved Interpreter.");
+    }
+    const reference = references[0] as { etn?: string; entityType?: string; id?: string | { guid?: string } };
+    if ((reference.etn || reference.entityType) !== "gsic_interpreter") {
+        throw new Error("Every language must belong to a saved Interpreter.");
+    }
+    const id = typeof reference.id === "string" ? reference.id : reference.id?.guid;
+    return guid(id || "");
+}
+
 export function testQuery(languageId: string): string {
     return "?$select=" + [...TEST_COLUMNS.map(column => column.name), LOOKUP_VALUE].join(",") +
         "&$filter=" + LOOKUP_VALUE + " eq " + guid(languageId) + "&$orderby=gsic_testdate desc";
