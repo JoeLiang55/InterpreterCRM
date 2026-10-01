@@ -43,6 +43,21 @@ The following values were manually verified on the `gsic_interpreterlanguage` ta
 | Language Code | `gsic_LanguageCode` |
 | Accreditation Status | `gsic_AccreditationStatus` |
 
+## Test Result
+
+The user confirmed these mappings from the Test Result Columns screenshot on 2026-10-01. Use lowercase logical names in Dataverse queries; maker schema names are distinct.
+
+| Display name | Logical name | Schema name | Confirmed type |
+| --- | --- | --- | --- |
+| Test Date | `gsic_testdate` | `gsic_TestDate` | Date only |
+| Test Type | `gsic_testtype` | `gsic_TestType` | Single line of text |
+| Test Version | `gsic_testversion` | `gsic_TestVersion` | Single line of text |
+| Test Incident | `gsic_testincident` | `gsic_TestIncident` | Yes/No (Boolean) |
+
+Test Type and Test Version are strings. Test Incident is a Boolean separate from Incident Details; no Incident Details logical name is established here. The screenshot does **not** establish Test Date behavior, text maximum lengths, or defaults. No Dataverse definitions were changed.
+
+Existing repository schema constants and `gsic_TestResultForm.js` identify table `gsic_testresult`, its `gsic_interpreterlanguage` lookup to `gsic_interpreterlanguage`, and decimal score columns `gsic_sighttranslationscore`, `gsic_consecutiveinterpretingscore`, and `gsic_simultaneousinterpretingscore`. Their target-environment published metadata, primary ID, relationship schema names, and form IDs have not been independently rechecked in this session: PAC has no authentication profile. The dataset PCF prototype uses the confirmed mappings and existing constants, and requires a related-record subgrid configured in a test environment. See [openForm prototype configuration and validation](docs/BILINGUAL_LANGUAGE_TESTS_OPENFORM_PCF.md). The local generated Interpreter metadata snapshot identifies primary ID logical name `gsic_interpreterid`; bind the prototype's Interpreter record ID input to this column.
+
 ## Event Attendee form
 
 The Event Attendee table logical name is `gsic_eventattendee`. The existing lookup names below were manually verified. The confirmation and testing columns below were checked against live CustomerService Trial Dataverse metadata on 2026-09-29 using the Power Platform CLI model builder and attribute metadata.
