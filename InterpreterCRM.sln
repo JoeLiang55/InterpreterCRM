@@ -4,8 +4,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.Plugins", "InterpreterCRM.Plugins\InterpreterCRM.Plugins.csproj", "{13400C53-83ED-4E6E-9731-AE0F4DF520BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.Plugins.Tests", "InterpreterCRM.Plugins.Tests\InterpreterCRM.Plugins.Tests.csproj", "{6B63C589-4442-4D6A-9265-4A6DA122516E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.DataverseSchema", "DataverseSchema\InterpreterCRM.DataverseSchema.csproj", "{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}"
 EndProject
 Global
@@ -18,13 +16,12 @@ Global
 		{13400C53-83ED-4E6E-9731-AE0F4DF520BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13400C53-83ED-4E6E-9731-AE0F4DF520BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13400C53-83ED-4E6E-9731-AE0F4DF520BA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B63C589-4442-4D6A-9265-4A6DA122516E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B63C589-4442-4D6A-9265-4A6DA122516E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B63C589-4442-4D6A-9265-4A6DA122516E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B63C589-4442-4D6A-9265-4A6DA122516E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
