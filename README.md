@@ -46,6 +46,8 @@ The build restores the projects' existing NuGet dependencies. No npm install is 
 
 ## Add to Registry command
 
+For Interpreter main-form language grid visibility, registration steps, and manual checks, see [Interpreter language subgrids](docs/INTERPRETER_LANGUAGE_SUBGRIDS.md). After adding a language, fully reload the form; Add Language completion code is not available in this repository.
+
 Add `JavascriptFormValidation/gsic_InterpreterForm.js` as the JavaScript web resource `gsic_InterpreterForm.js`. On the **Interpreter Main Form** command bar, add a JavaScript action with library `gsic_InterpreterForm.js`, function `GSIC.InterpreterForm.addToRegistry`, and one parameter: **CRM Parameter → PrimaryControl**. Do not pass the form execution context or a custom string parameter. No form OnLoad handler or Form Libraries registration is required for this command action.
 
 Include the `gsic_inregistry` (In Registry) and `gsic_registrydateadded` (Registry Date Added) columns on the form so the command can read and set them. They may be hidden. The command requires a saved record, ignores one already marked In Registry, sets today's local Date Only value, saves, refreshes, and shows a dialog. It performs no eligibility checks or Registry removal.
@@ -53,6 +55,8 @@ Include the `gsic_inregistry` (In Registry) and `gsic_registrydateadded` (Regist
 Run `node --test JavascriptFormValidation/gsic_InterpreterForm.test.js` for the command's local mock tests.
 
 ## Conversion behavior and assumptions
+
+Both explicit Custom API and automatic screening conversion use the shared converter to copy `gsic_applicationreferencenumber` to `gsic_interpreterreferencenumber` exactly as stored text. A missing or blank reference rejects conversion before writes. See [reference-number deployment and manual checks](docs/CONVERSION_REFERENCE_NUMBERS.md) for the remaining column configuration checks. Directly created Interpreters and existing records are unchanged.
 
 The only entry point is an Applicant-bound Custom API Action, at main-operation stage 30. It must execute synchronously inside a Dataverse transaction. There is no Applicant Update/Status step or automated BPF trigger.
 

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.Plugins", "I
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.DataverseSchema", "DataverseSchema\InterpreterCRM.DataverseSchema.csproj", "{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterpreterCRM.Plugins.Tests", "InterpreterCRM.Plugins.Tests\InterpreterCRM.Plugins.Tests.csproj", "{11AC59CD-8609-4601-928B-D775DAB4A12C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{833A82EA-235F-4568-B8B4-C0DAFDA4EFD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11AC59CD-8609-4601-928B-D775DAB4A12C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11AC59CD-8609-4601-928B-D775DAB4A12C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11AC59CD-8609-4601-928B-D775DAB4A12C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11AC59CD-8609-4601-928B-D775DAB4A12C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

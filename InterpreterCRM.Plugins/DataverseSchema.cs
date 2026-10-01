@@ -16,6 +16,8 @@ namespace InterpreterCRM.Plugins
         {
             public const string Table = "gsic_applicant";
             public const string Name = "gsic_applicantname";
+            // Confirmed on the Applicant column; autonumber values are stored as text.
+            public const string ApplicationReferenceNumber = "gsic_applicationreferencenumber";
             public const string Email = "gsic_emailaddress";
             public const string Phone = "gsic_phone";
             public const string Address = "gsic_address";
@@ -38,6 +40,8 @@ namespace InterpreterCRM.Plugins
         {
             public const string Table = "gsic_interpreter";
             public const string Name = "gsic_name";
+            // Confirmed by the local generated Interpreter metadata export.
+            public const string ReferenceNumber = "gsic_interpreterreferencenumber";
             public const string Phone = "gsic_phone";
             public const string Address = "gsic_address";
             public const string Region = "gsic_region";

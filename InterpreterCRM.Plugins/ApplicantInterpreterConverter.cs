@@ -21,6 +21,7 @@ namespace InterpreterCRM.Plugins
             var columns = new List<string>
             {
                 DataverseSchema.Applicant.Name,
+                DataverseSchema.Applicant.ApplicationReferenceNumber,
                 DataverseSchema.Applicant.CourtRegion,
                 DataverseSchema.Applicant.Interpreter,
                 DataverseSchema.Applicant.ArchiveApplication,
@@ -49,6 +50,9 @@ namespace InterpreterCRM.Plugins
             var applicantName = ReadText(applicant, DataverseSchema.Applicant.Name);
             if (string.IsNullOrWhiteSpace(applicantName))
                 throw new InvalidPluginExecutionException("Applicant Name is required to create an Interpreter profile.");
+            var applicationReferenceNumber = ReadText(applicant, DataverseSchema.Applicant.ApplicationReferenceNumber);
+            if (string.IsNullOrWhiteSpace(applicationReferenceNumber))
+                throw new InvalidPluginExecutionException("Applicant Application Reference Number is required to create an Interpreter profile.");
             if (string.IsNullOrWhiteSpace(applicant.RowVersion))
                 throw new InvalidPluginExecutionException("Applicant row version is unavailable. Ask an administrator to verify optimistic concurrency is enabled.");
 
@@ -57,6 +61,8 @@ namespace InterpreterCRM.Plugins
 
             var interpreter = new Entity(DataverseSchema.Interpreter.Table);
             interpreter[DataverseSchema.Interpreter.Name] = applicantName.Trim();
+            // Copy the stored text verbatim: prefixes, casing, whitespace and leading zeros are significant.
+            interpreter[DataverseSchema.Interpreter.ReferenceNumber] = applicationReferenceNumber;
             foreach (var mapping in DataverseSchema.OptionalTextMappings)
             {
                 var value = ReadText(applicant, mapping.Key);
