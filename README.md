@@ -56,6 +56,8 @@ Run `node --test JavascriptFormValidation/gsic_InterpreterForm.test.js` for the 
 
 ## Conversion behavior and assumptions
 
+Both explicit Custom API and automatic screening conversion use the shared converter to copy `gsic_applicationreferencenumber` to `gsic_interpreterreferencenumber` exactly as stored text. A missing or blank reference rejects conversion before writes. See [reference-number deployment and manual checks](docs/CONVERSION_REFERENCE_NUMBERS.md) for the remaining column configuration checks. Directly created Interpreters and existing records are unchanged.
+
 The only entry point is an Applicant-bound Custom API Action, at main-operation stage 30. It must execute synchronously inside a Dataverse transaction. There is no Applicant Update/Status step or automated BPF trigger.
 
 The handler retrieves the bound Applicant using an explicit ColumnSet, rejects an existing Interpreter lookup with the required message, validates data, creates one Interpreter, then links and archives the Applicant with one conditional UpdateRequest. It returns `InterpreterId` only after the update succeeds. Calls use `context.UserId`, preserving caller permissions. Trace entries contain record/correlation IDs and progress, not copied personal field values.

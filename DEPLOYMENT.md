@@ -1,5 +1,7 @@
 # Proposed deployment — not executed
 
+For the shared Applicant-to-Interpreter reference-number mapping, confirmed column names, remaining length/autonumber checks, existing assembly/step update instructions, and manual conversion checks, see [Matching conversion reference numbers](docs/CONVERSION_REFERENCE_NUMBERS.md). This is a separate assembly change from the Interpreter subgrid JavaScript update.
+
 No Dataverse environment was connected to. No assembly, Custom API, step, table metadata, web resource, or app command was registered or modified. No deployment tooling was installed.
 
 ## Metadata required before registration

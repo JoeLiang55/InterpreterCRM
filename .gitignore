@@ -11,6 +11,7 @@
 
 # Ad hoc Dataverse metadata exports; existing tracked snapshots remain tracked.
 /.metadata-check/
+/.build-tools/
 
 # Test coverage output
 coverage/

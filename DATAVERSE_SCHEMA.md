@@ -1,5 +1,11 @@
 # Verified Dataverse schema
 
+## Conversion reference numbers
+
+The user confirmed Applicant Application Reference Number is `gsic_applicationreferencenumber`, with autonumber previews `26-1000`, `26-1001`, `26-1002`. Interpreter Reference Number is `gsic_interpreterreferencenumber`; the local generated Interpreter metadata export confirms a writable string property. Conversion copies the Applicant's stored text exactly into the new Interpreter using the shared converter for both the Custom API and screening-triggered paths.
+
+Maximum lengths and exact autonumber format expressions are not established by the screenshots/export. The target's `AutoNumberFormat`, `IsValidForCreate`, field security and length compatibility require published metadata verification before deployment. No settings have been changed. See [conversion reference-number deployment and checks](docs/CONVERSION_REFERENCE_NUMBERS.md).
+
 ## Applicant name fields
 
 The Applicant primary-name schema name is recorded as `gsic_ApplicantName` in the verified conversion metadata and deployment notes; its logical name used by Dataverse APIs and form JavaScript is `gsic_applicantname`. The split-name fields requested for addition are:
