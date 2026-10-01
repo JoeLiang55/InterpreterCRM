@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+  <control namespace="GSIC.Prototype" constructor="BilingualLanguageTestsOpenForm" version="0.1.0" display-name-key="Bilingual Language Tests - openForm Prototype" description-key="Expandable related-language test history using PCF navigation and explicit Refresh" control-type="standard">
+    <external-service-usage enabled="false" />
+    <property name="interpreterId" display-name-key="Interpreter record ID" description-key="Bind to the current Interpreter primary ID to validate related language rows" of-type="SingleLine.Text" usage="input" required="true" />
+    <property name="testResultFormId" display-name-key="Test Result main form ID" description-key="Verified main form GUID configured with gsic_TestResultForm.js" of-type="SingleLine.Text" usage="input" required="true" />
+    <data-set name="languages" display-name-key="Related Bilingual Interpreter Languages" />
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/BilingualLanguageTests.css" order="1" />
+    </resources>
+    <feature-usage><uses-feature name="WebAPI" required="true" /></feature-usage>
+  </control>
+</manifest>

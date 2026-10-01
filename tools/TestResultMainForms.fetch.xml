@@ -1,0 +1,14 @@
+<fetch>
+  <entity name="systemform">
+    <attribute name="formid" />
+    <attribute name="name" />
+    <attribute name="type" />
+    <attribute name="formactivationstate" />
+    <attribute name="objecttypecode" />
+    <filter type="and">
+      <condition attribute="objecttypecode" operator="eq" value="gsic_testresult" />
+      <condition attribute="type" operator="eq" value="2" />
+      <condition attribute="formactivationstate" operator="eq" value="1" />
+    </filter>
+  </entity>
+</fetch>

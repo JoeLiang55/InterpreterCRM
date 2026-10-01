@@ -1,0 +1,16 @@
+.gsic-language-tests { color: #242424; font: 14px "Segoe UI", sans-serif; padding: 8px; }
+.gsic-language-tests .gsic-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 12px; }
+.gsic-language-tests .gsic-toolbar span { color: #616161; }
+.gsic-language-tests button { background: #fff; color: #0f6cbd; border: 1px solid #d1d1d1; border-radius: 4px; padding: 7px 12px; cursor: pointer; }
+.gsic-language-tests button:hover:enabled { background: #eff6fc; }
+.gsic-language-tests button:focus-visible { outline: 2px solid #0f6cbd; outline-offset: 2px; }
+.gsic-language-tests button:disabled { color: #8a8886; cursor: default; }
+.gsic-language-tests .gsic-table-scroll { overflow-x: auto; margin-bottom: 12px; }
+.gsic-language-tests table { width: 100%; border-collapse: collapse; }
+.gsic-language-tests caption { text-align: left; font-weight: 600; padding: 8px 0; }
+.gsic-language-tests th { text-align: left; background: #fafafa; font-weight: 600; }
+.gsic-language-tests th, .gsic-language-tests td { padding: 10px; border-bottom: 1px solid #e0e0e0; vertical-align: top; overflow-wrap: anywhere; }
+.gsic-language-tests .gsic-test-region { padding: 8px 12px 12px; border-left: 3px solid #0f6cbd; background: #f5f9fc; }
+.gsic-language-tests .gsic-tests { min-width: 900px; margin: 8px 0; }
+.gsic-language-tests .gsic-error { color: #a4262c; }
+.gsic-language-tests .gsic-message { color: #616161; }
