@@ -13,6 +13,11 @@
         ["gsic_retraining", "gsic_retrainingdate"]
     ]);
     const pendingForms = new WeakSet();
+    // The form export is not in this repository: do not infer categories or sections.
+    const LANGUAGE_SUBGRID_NAMES = Object.freeze([
+        "Subgrid_new_1", "Subgrid_new_2", "Subgrid_new_3"
+    ]);
+    const languageGridHandlers = new WeakMap();
 
     const GSIC = global.GSIC = global.GSIC || {};
     const InterpreterForm = GSIC.InterpreterForm = GSIC.InterpreterForm || {};
@@ -53,6 +58,49 @@
         }
     }
 
+    function updateLanguageGridVisibility(control) {
+        try {
+            const grid = control.getGrid();
+            if (!grid || typeof grid.getTotalRecordCount !== "function") {
+                return;
+            }
+            const count = grid.getTotalRecordCount();
+            // Null, undefined, negative loading sentinels and errors are not empty grids.
+            if (typeof count === "number" && Number.isFinite(count) && count >= 0) {
+                control.setVisible(count > 0);
+            }
+        } catch (error) {
+            logError("Could not read the loaded language subgrid count.", error);
+        }
+    }
+
+    function refreshLanguageSubgrids(formContext) {
+        if (!formContext || typeof formContext.getControl !== "function") {
+            return;
+        }
+        LANGUAGE_SUBGRID_NAMES.forEach(function (name) {
+            try {
+                const control = formContext.getControl(name);
+                if (!control || typeof control.addOnLoad !== "function" ||
+                    typeof control.getGrid !== "function" || typeof control.setVisible !== "function" ||
+                    typeof control.refresh !== "function") {
+                    return;
+                }
+                if (!languageGridHandlers.has(control)) {
+                    const handler = function () { updateLanguageGridVisibility(control); };
+                    control.addOnLoad(handler);
+                    languageGridHandlers.set(control, handler);
+                }
+                // Hidden grids may defer loading. Reveal before requesting fresh data;
+                // only the subsequent grid OnLoad may decide that a grid is empty.
+                control.setVisible(true);
+                control.refresh();
+            } catch (error) {
+                logError("Could not refresh language subgrid " + name + ".", error);
+            }
+        });
+    }
+
     InterpreterForm.onLoad = function (executionContext) {
         try {
             const formContext = executionContext && executionContext.getFormContext();
@@ -70,6 +118,7 @@
                 }
             });
             updateDependentControls(formContext);
+            refreshLanguageSubgrids(formContext);
         } catch (error) {
             logError("Could not initialize Interpreter qualification fields.", error);
         }
