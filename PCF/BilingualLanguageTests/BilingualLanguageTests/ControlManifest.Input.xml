@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+  <control namespace="GSIC" constructor="BilingualLanguageTests" version="0.1.0" display-name-key="Bilingual Language Tests (Prototype)" description-key="Expandable bilingual test history for a related Interpreter Language dataset" control-type="standard">
+    <external-service-usage enabled="false" />
+    <property name="interpreterId" display-name-key="Interpreter record ID" description-key="Bind to the current Interpreter primary ID to validate related language rows" of-type="SingleLine.Text" usage="input" required="true" />
+    <property name="testResultFormId" display-name-key="Test Result main form ID" description-key="Verified existing Test Result main form GUID; no default form fallback" of-type="SingleLine.Text" usage="input" required="true" />
+    <event name="newTestResult" display-name-key="New Test Result" description-key="Request a create-mode main-form dialog from the host form script" />
+    <data-set name="languages" display-name-key="Related Bilingual Interpreter Languages" />
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/BilingualLanguageTests.css" order="1" />
+    </resources>
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+  </control>
+</manifest>

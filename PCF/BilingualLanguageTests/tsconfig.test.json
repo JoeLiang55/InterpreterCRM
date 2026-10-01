@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2020",
+    "outDir": "test-output",
+    "rootDir": "BilingualLanguageTests",
+    "strict": true,
+    "noEmit": false
+  },
+  "include": ["BilingualLanguageTests/**/*.ts"]
+}

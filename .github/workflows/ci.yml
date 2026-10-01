@@ -49,3 +49,26 @@ jobs:
               node --test $_.FullName
               if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
+
+  pcf-openform-prototype:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: PCF/BilingualLanguageTestsOpenForm
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install PCF dependencies
+        run: npm ci
+      - name: Build openForm prototype
+        run: npm run build:release
+      - name: Test openForm prototype
+        run: npm test

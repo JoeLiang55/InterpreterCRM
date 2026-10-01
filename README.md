@@ -44,6 +44,22 @@ Get-ChildItem -LiteralPath JavascriptFormValidation -Filter *.test.js -File -Rec
 
 The build restores the projects' existing NuGet dependencies. No npm install is needed, and generated build and test output is already excluded by `.gitignore`.
 
+## Language tests dataset PCF prototype
+
+The [Bilingual Language Tests dataset PCF](docs/BILINGUAL_LANGUAGE_TESTS_PCF.md)
+places **New Test Result inside each expanded language's test area**, including
+empty histories. The prototype uses the confirmed Test Result mappings and a host
+script for main-form dialog completion and refresh. Configuration instructions,
+local checks, and the preview-event/runtime blockers are documented there.
+
+## Add Test Result command
+
+For the parent Interpreter Language **Add Test Result** command, exact command
+parameters, main-form metadata lookup, and live acceptance checks, see
+[Add Test Result registration](docs/ADD_TEST_RESULT_COMMAND.md). The JavaScript is
+implemented locally; the actual Test Result main-form GUID and app command
+configuration must be supplied from the intended environment.
+
 ## Add to Registry command
 
 For Interpreter main-form language grid visibility, registration steps, and manual checks, see [Interpreter language subgrids](docs/INTERPRETER_LANGUAGE_SUBGRIDS.md). After adding a language, fully reload the form; Add Language completion code is not available in this repository.
