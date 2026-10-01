@@ -1,6 +1,17 @@
+# .NET build and test output
 **/bin/
 **/obj/
 **/TestResults/
+*.trx
+
+# Local IDE settings
 .vs/
 *.user
 *.suo
+
+# Ad hoc Dataverse metadata exports; existing tracked snapshots remain tracked.
+/.metadata-check/
+
+# Test coverage output
+coverage/
+.nyc_output/
