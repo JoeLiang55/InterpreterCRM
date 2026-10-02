@@ -1,13 +1,14 @@
 {
   "name": "gsic-bilingual-language-tests-openform-prototype",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "private": true,
-  "description": "Dataset PCF prototype for related bilingual language test history.",
+  "description": "Dataset PCF for related Bilingual, English and First Nation language test history.",
   "scripts": {
     "build": "pcf-scripts build",
     "postbuild": "tsc --noEmit",
     "build:release": "pcf-scripts build --buildMode production && tsc --noEmit",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.cjs",
+    "test:bundle": "node --test tests/production-bundle.cjs",
     "clean": "pcf-scripts clean",
     "lint": "pcf-scripts lint",
     "lint:fix": "pcf-scripts lint fix",

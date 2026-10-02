@@ -2,6 +2,11 @@
 export const LANGUAGE_TABLE = "gsic_interpreterlanguage";
 export const TEST_TABLE = "gsic_testresult";
 export const BILINGUAL = 472540000;
+export const LANGUAGE_CATEGORIES = new Map<number, string>([
+    [BILINGUAL, "Bilingual"],
+    [472540001, "English"],
+    [472540002, "First Nation"]
+]);
 export const LOOKUP_VALUE = "_gsic_interpreterlanguage_value";
 export const TEST_COLUMNS = [
     { name: "gsic_testdate", label: "Test Date" },

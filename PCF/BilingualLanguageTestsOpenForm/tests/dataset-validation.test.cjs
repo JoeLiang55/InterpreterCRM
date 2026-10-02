@@ -14,17 +14,17 @@ const VIEW = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 const DUPLICATE = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
-function setup(category, owner = PARENT) {
+function setup(category, owner = PARENT, id = ID) {
     if (arguments.length === 0) category = 472540000;
     const dom = new JSDOM('<div id="control"></div>');
     const root = dom.window.document.getElementById('control');
     const calls = [];
     let viewId = VIEW;
-    const row = { getRecordId: () => ID,
+    const row = { getRecordId: () => id,
         getValue: key => key === 'gsic_languagecategory' ? category : key === 'gsic_interpreter'
             ? { etn: 'gsic_interpreter', id: { guid: owner } } : 'French',
         getFormattedValue: key => key === 'gsic_languagecategory' ? 'Bilingual' : 'French' };
-    const dataset = { loading: false, error: false, records: { [ID]: row }, sortedRecordIds: [ID],
+    const dataset = { loading: false, error: false, records: { [id]: row }, sortedRecordIds: [id],
         columns: ['gsic_languagename', 'gsic_languagecategory', 'gsic_interpreter'].map(name => ({ name, alias: name, dataType: name === 'gsic_languagecategory' ? 'OptionSet' : 'SingleLine.Text' })),
         getTargetEntityType: () => 'gsic_interpreterlanguage', getTitle: () => 'Bilingual View', getViewId: () => viewId,
         filtering: { getFilter: () => ({ filterOperator: 0, conditions: [], filters: [] }),
@@ -47,7 +47,7 @@ test('normal UI hides build and view diagnostics while retaining Refresh and mat
     assert.equal(manifest.getAttribute('namespace') + '.' + manifest.getAttribute('constructor'), BUILD_INFO.component);
     const hiddenText = [BUILD_INFO.component, BUILD_INFO.build, 'Bound view:', 'Bilingual View', VIEW,
         'After saving a Test Result, return here and select Refresh.', 'Inspect bound view'];
-    for (const app of [setup(), setup(null)]) {
+    for (const app of [setup(), setup(472540001), setup('472540002'), setup(null)]) {
         const check = () => {
             assert.ok([...app.root.querySelectorAll('button')].some(button => button.textContent === 'Refresh'));
             assert.equal(app.root.querySelector('.gsic-build-marker'), null);
@@ -85,9 +85,9 @@ test('an unreadable runtime filter is diagnostic-only, not a grid failure', () =
 });
 
 test('reject missing, unknown and mislabeled categories without exposing bound view identity', () => {
-    for (const raw of [null, undefined, 472540001, '472540002', 'Bilingual', true, [472540000], { value: 472540000 }]) {
+    for (const raw of [null, undefined, 472540003, '472540004', 'Bilingual', true, [472540000], { value: 472540000 }]) {
         const app = setup(raw); assert.equal(app.root.querySelector('[aria-expanded]'), null);
-        assert.match(app.root.textContent, /expected Bilingual/);
+        assert.match(app.root.textContent, /expected a supported Language Category/);
         assert.ok(app.root.textContent.includes(ID)); assert.ok(app.root.textContent.includes('gsic_languagecategory='));
         assert.ok(!app.root.textContent.includes(VIEW)); assert.ok(!app.root.textContent.includes('Bilingual View'));
         assert.equal(app.calls.length, 0);
@@ -96,6 +96,38 @@ test('reject missing, unknown and mislabeled categories without exposing bound v
     assert.equal(categoryCode('472540000.0'), undefined);
     assert.equal(categoryCode('0x1c2a0000'), undefined);
 });
+
+for (const [code, label] of [[472540000, 'Bilingual'], [472540001, 'English'], [472540002, 'First Nation']]) {
+    for (const raw of [code, String(code)]) {
+        test(label + ' runtime category ' + JSON.stringify(raw) + ' accepts the reported language record', async () => {
+            const id = 'a582aa0b-d2bd-f111-aaad-000d3a5c3e0a';
+            const app = setup(raw, PARENT, id);
+            assert.equal(app.root.querySelector('[role="alert"]'), null);
+            assert.equal(app.root.querySelector('.gsic-languages caption').textContent, label + ' Interpreter Languages');
+            assert.ok(!app.root.textContent.includes('expected Bilingual (472540000).'));
+            app.root.querySelector('[aria-expanded]').click(); await settle();
+            assert.equal(app.calls.length, 1);
+            assert.ok(app.calls[0][1].includes('_gsic_interpreterlanguage_value eq ' + id));
+            // Every required column and the Interpreter relationship remain mandatory.
+            for (const missing of ['gsic_languagename', 'gsic_languagecategory', 'gsic_interpreter']) {
+                const invalid = setup(raw, PARENT, id);
+                invalid.dataset.columns = invalid.dataset.columns.filter(column => column.name !== missing);
+                invalid.control.updateView(invalid.context);
+                assert.match(invalid.root.textContent, /must include/);
+                assert.equal(invalid.root.querySelector('[aria-expanded]'), null);
+                invalid.control.destroy();
+            }
+            const wrongOwner = setup(raw, OTHER, id);
+            assert.match(wrongOwner.root.textContent, /different Interpreter/);
+            assert.equal(wrongOwner.root.querySelector('[aria-expanded]'), null);
+            const wrongTable = setup(raw, PARENT, id);
+            wrongTable.dataset.getTargetEntityType = () => 'gsic_testresult';
+            wrongTable.control.updateView(wrongTable.context);
+            assert.match(wrongTable.root.textContent, /Interpreter Language related-record subgrid/);
+            wrongTable.control.destroy(); wrongOwner.control.destroy(); app.control.destroy();
+        });
+    }
+}
 
 test('string categories and documented lookup objects still enforce exact Interpreter ownership', () => {
     const app = setup('472540000', OTHER); assert.equal(app.root.querySelector('[aria-expanded]'), null);

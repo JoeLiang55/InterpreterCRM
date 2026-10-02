@@ -1,5 +1,5 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
-import { BILINGUAL, LANGUAGE_TABLE, TEST_TABLE, TEST_COLUMNS, TestHistory, cellText, errorText, guid, interpreterReferenceId } from "./history";
+import { LANGUAGE_CATEGORIES, LANGUAGE_TABLE, TEST_TABLE, TEST_COLUMNS, TestHistory, cellText, errorText, guid, interpreterReferenceId } from "./history";
 import { categoryCode, categoryError } from "./diagnostics";
 
 type Dataset = ComponentFramework.PropertyTypes.DataSet;
@@ -86,7 +86,8 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
             const record = dataset.records[key];
             const id = guid(record.getRecordId());
             const rawCategory = record.getValue("gsic_languagecategory");
-            if (categoryCode(rawCategory) !== BILINGUAL) {
+            // The bound view selects the category; validate all supported numeric/string choices.
+            if (!LANGUAGE_CATEGORIES.has(categoryCode(rawCategory) ?? -1)) {
                 throw new Error(categoryError(id, rawCategory));
             }
             if (interpreterReferenceId(record.getValue("gsic_interpreter")) !== this.scope) {
@@ -191,12 +192,14 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
             return;
         }
         if (busy) this.root.append(this.message("Refreshing languages…"));
-        if (!this.languages.length && !busy) this.root.append(this.message("No bilingual languages in this related view."));
+        if (!this.languages.length && !busy) this.root.append(this.message("No interpreter languages in this related view."));
         const columns = dataset.columns.filter(column => !column.isHidden &&
             column.name !== "gsic_interpreter" && column.name !== "gsic_languagecategory");
         const table = this.element("table");
         table.className = "gsic-languages";
-        table.append(this.element("caption", "Bilingual Interpreter Languages"));
+        const categories = new Set(this.languages.map(language => categoryCode(language.record.getValue("gsic_languagecategory"))));
+        const category = categories.size === 1 ? LANGUAGE_CATEGORIES.get(categories.values().next().value ?? -1) : undefined;
+        table.append(this.element("caption", category ? category + " Interpreter Languages" : "Interpreter Languages"));
         const head = this.element("thead");
         const headings = this.element("tr");
         headings.append(this.element("th", "Tests"));

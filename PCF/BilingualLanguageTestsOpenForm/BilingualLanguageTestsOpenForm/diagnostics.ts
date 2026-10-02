@@ -1,6 +1,6 @@
 type Dataset = ComponentFramework.PropertyTypes.DataSet;
 type Filter = ComponentFramework.PropertyHelper.DataSetApi.FilterExpression;
-import { errorText, guid } from "./history";
+import { LANGUAGE_CATEGORIES, errorText, guid } from "./history";
 
 // A Choice may reach the dataset as an integer or an integer string. Do not accept
 // labels, arrays, Boolean coercion or guessed object wrappers as category codes.
@@ -30,8 +30,9 @@ export function viewIdentity(dataset: Dataset): string {
 }
 
 export function categoryError(id: string, raw: unknown): string {
+    const supported = Array.from(LANGUAGE_CATEGORIES, ([code, label]) => label + " (" + code + ")").join(", ");
     return "Language " + id + " returned gsic_languagecategory=" + rawText(raw) +
-    " (" + valueType(raw) + "); expected Bilingual (472540000).";
+    " (" + valueType(raw) + "); expected a supported Language Category: " + supported + ".";
 }
 
 function filterShape(filter: Filter): unknown {

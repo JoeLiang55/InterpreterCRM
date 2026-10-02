@@ -162,7 +162,7 @@ test('collapse and destroy ignore pending completions and preserve host DOM', as
 
 test('wrong parent/category, missing view columns and unsaved parent never display language data', () => {
     const other = setup({ [A]: record(A, Q) }); assert.match(other.container.textContent, /different Interpreter/);
-    const english = setup({ [A]: record(A, P, 472540001) }); assert.match(english.container.textContent, /expected Bilingual/);
+    const unknown = setup({ [A]: record(A, P, 472540003) }); assert.match(unknown.container.textContent, /expected a supported Language Category/);
     const missing = setup(); missing.context.parameters.languages.columns.pop(); missing.component.updateView(missing.context);
     assert.match(missing.container.textContent, /must include/);
     const unsaved = setup(); unsaved.context.parameters.interpreterId.raw = null; unsaved.component.updateView(unsaved.context);
@@ -191,4 +191,79 @@ test('malformed continuations and network errors show recoverable errors', async
     assert.match(app.container.textContent, /invalid continuation/);
     app.retrieve(() => Promise.reject({ message: 'Network error' })); app.click('Retry'); await settle();
     assert.match(app.container.textContent, /Network error/);
+});
+
+for (const [category, label] of [[472540000, 'Bilingual'], [472540001, 'English'], [472540002, 'First Nation']]) {
+    test(label + ': bound rows, isolated history, exact create navigation and refreshed data', async () => {
+        const app = setup({ [A]: record(A, P, category), [B]: record(B, P, String(category)) });
+        const dataset = app.context.parameters.languages;
+        // Category predicates may exist only in saved FetchXML, and view identity is irrelevant.
+        dataset.getViewId = dataset.getTitle = () => { throw new Error('View identity must not be read'); };
+        dataset.filtering = {
+            getFilter: () => { throw new Error('Runtime filter must not be read'); },
+            setFilter: () => { throw new Error('Host filtering must not be changed'); }
+        };
+        app.component.updateView(app.context);
+        assert.equal(app.container.querySelector('.gsic-languages caption').textContent, label + ' Interpreter Languages');
+        assert.equal(app.container.querySelectorAll('[aria-expanded]').length, 2);
+        assert.equal(app.calls.length, 0);
+        app.retrieve(() => Promise.resolve({ entities: [{ [LOOKUP_VALUE]: A, gsic_testtype: 'Before save' }] }));
+        app.toggle(A); await settle();
+        assert.equal(app.calls[0][0], 'gsic_testresult');
+        assert.equal(app.calls[0][1], testQuery(A));
+        app.click('+ New Test Result'); await settle();
+        assert.deepEqual(app.opens[0], [
+            { entityName: 'gsic_testresult', formId: Q, useQuickCreateForm: false, openInNewWindow: true },
+            { gsic_interpreterlanguage: A, gsic_interpreterlanguagename: 'French' }
+        ]);
+        assert.equal(app.refreshes(), 0);
+        app.click('Refresh'); app.click('Refresh');
+        assert.equal(app.refreshes(), 1);
+        dataset.loading = true; app.context.updatedProperties = ['dataset']; app.component.updateView(app.context);
+        assert.equal(app.calls.length, 1);
+        // Simulate updated language values and Test Result history returned after saving.
+        dataset.records[A] = { ...record(A, P, category), getFormattedValue: key => key === 'gsic_languagename' ? 'Updated language' : '' };
+        dataset.sortedRecordIds = [A];
+        app.retrieve(() => Promise.resolve({ entities: [{ [LOOKUP_VALUE]: A, gsic_testtype: 'After save' }] }));
+        dataset.loading = false; app.component.updateView(app.context); await settle();
+        assert.equal(app.calls.length, 2);
+        assert.ok(app.calls.every(call => call[1] === testQuery(A)));
+        assert.equal(app.container.querySelectorAll('[aria-expanded]').length, 1);
+        assert.equal(app.container.querySelector('[aria-expanded]').getAttribute('aria-expanded'), 'true');
+        assert.match(app.container.textContent, /Updated language/);
+        assert.match(app.container.textContent, /After save/);
+        assert.ok(!app.container.textContent.includes('Before save'));
+        assert.equal([...app.container.querySelectorAll('button')].find(button => button.textContent === 'Refresh').disabled, false);
+        app.component.destroy();
+    });
+
+    test(label + ': ownership and disabled creation remain enforced', async () => {
+        const wrongParent = setup({ [A]: record(A, Q, category) });
+        assert.match(wrongParent.container.textContent, /different Interpreter/);
+        assert.equal(wrongParent.container.querySelector('[aria-expanded]'), null);
+        assert.equal(wrongParent.calls.length, 0);
+        const app = setup({ [A]: record(A, P, category) });
+        app.toggle(A); await settle();
+        app.context.mode.isControlDisabled = true; app.component.updateView(app.context);
+        app.click('+ New Test Result'); assert.equal(app.opens.length, 0);
+        app.context.mode.isControlDisabled = false;
+        app.context.parameters.testResultFormId.raw = 'invalid'; app.component.updateView(app.context);
+        app.click('+ New Test Result'); assert.equal(app.opens.length, 0);
+        app.component.destroy(); wrongParent.component.destroy();
+    });
+}
+
+test('a mixed-category dataset displays exactly the host supplied rows without category filtering', () => {
+    const C = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+    const app = setup({ [A]: record(A, P, 472540000), [B]: record(B, P, 472540001), [C]: record(C, P, 472540002) });
+    assert.equal(app.container.querySelectorAll('[aria-expanded]').length, 3);
+    assert.equal(app.container.querySelector('.gsic-languages caption').textContent, 'Interpreter Languages');
+    app.context.parameters.languages.sortedRecordIds = [B]; app.context.updatedProperties = ['dataset'];
+    app.component.updateView(app.context);
+    assert.equal(app.container.querySelectorAll('[aria-expanded]').length, 1);
+    assert.equal(app.container.querySelector('[aria-expanded]').dataset.focus, 'toggle-' + B);
+    assert.equal(app.container.querySelector('.gsic-languages caption').textContent, 'English Interpreter Languages');
+    app.context.parameters.languages.sortedRecordIds = []; app.component.updateView(app.context);
+    assert.match(app.container.textContent, /No interpreter languages in this related view/);
+    app.component.destroy();
 });

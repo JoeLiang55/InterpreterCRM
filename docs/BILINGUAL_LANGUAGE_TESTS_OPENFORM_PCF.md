@@ -1,5 +1,7 @@
 # Bilingual language test history: PCF openForm prototype
 
+Current shared-control guidance: [Interpreter Language Tests PCF 0.1.5](INTERPRETER_LANGUAGE_TESTS_SHARED_PCF.md). The user confirmed Bilingual 0.1.3 works. Version 0.1.5 supports English and First Nation using the same control, with diagnostics absent from the normal UI. The prototype/marker package and diagnostic notes below describe earlier versions.
+
 This workspace has not imported, pushed, published, or attached a control to the working grid. The user subsequently reported importing the verified 0.1.1.0 ZIP; live binding and layers are not yet verified here. The current 0.1.2.0 marker package is prepared locally. Use a separate test form in a nonproduction environment for the configuration steps below.
 
 ## Two implementations
