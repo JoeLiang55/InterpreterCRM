@@ -1,7 +1,6 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import { BILINGUAL, LANGUAGE_TABLE, TEST_TABLE, TEST_COLUMNS, TestHistory, cellText, errorText, guid, interpreterReferenceId } from "./history";
-import { BoundViewInspector, DatasetDiagnostics, categoryCode, categoryError, datasetDiagnostics } from "./diagnostics";
-import { BUILD_INFO } from "./buildInfo";
+import { categoryCode, categoryError } from "./diagnostics";
 
 type Dataset = ComponentFramework.PropertyTypes.DataSet;
 type EntityRecord = ComponentFramework.PropertyHelper.DataSetApi.EntityRecord;
@@ -14,9 +13,6 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
     private languages: LanguageRow[] = [];
     private scope?: string;
     private configurationError?: string;
-    private diagnostics?: DatasetDiagnostics;
-    private viewInspector = new BoundViewInspector();
-    private diagnosticsOpen = false;
     private navigationError?: string;
     private refreshPending = false;
     private datasetWasLoading = false;
@@ -37,8 +33,6 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
         if (this.destroyed) return;
         this.context = context;
         const dataset = context.parameters.languages;
-        this.diagnostics = datasetDiagnostics(dataset, context.parameters.interpreterId.raw, interpreterReferenceId);
-        this.viewInspector.setView(String(this.diagnostics.snapshot.viewId));
         const datasetChanged = context.updatedProperties.includes("dataset") || context.updatedProperties.includes("languages");
         const loadCompleted = !dataset.loading && (datasetChanged || this.datasetWasLoading);
         this.datasetWasLoading = dataset.loading;
@@ -93,7 +87,7 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
             const id = guid(record.getRecordId());
             const rawCategory = record.getValue("gsic_languagecategory");
             if (categoryCode(rawCategory) !== BILINGUAL) {
-                throw new Error(categoryError(dataset, id, rawCategory));
+                throw new Error(categoryError(id, rawCategory));
             }
             if (interpreterReferenceId(record.getValue("gsic_interpreter")) !== this.scope) {
                 throw new Error("The language view returned a row for a different Interpreter. Configure Only related records.");
@@ -179,37 +173,10 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
         this.root.replaceChildren();
         const dataset = this.context.parameters.languages;
         const busy = dataset.loading || this.refreshPending;
-        const marker = this.element("p", BUILD_INFO.component + " | v" + BUILD_INFO.version + " | build " + BUILD_INFO.build);
-        marker.className = "gsic-build-marker";
-        this.root.append(marker);
         const toolbar = this.element("div");
         toolbar.className = "gsic-toolbar";
         toolbar.append(this.button("Refresh", () => this.refresh(), "refresh", busy));
-        toolbar.append(this.element("span", "After saving a Test Result, return here and select Refresh."));
         this.root.append(toolbar);
-        if (this.diagnostics) {
-            const details = this.element("details");
-            details.className = "gsic-diagnostics";
-            details.open = this.diagnosticsOpen || !!this.configurationError || dataset.error;
-            details.addEventListener("toggle", () => {
-                if (this.root.contains(details)) this.diagnosticsOpen = details.open;
-            });
-            details.append(this.element("summary", "Bound view: " + this.diagnostics.boundView));
-            details.append(this.element("p", "Dataset diagnostics — row values and runtime filter only; the saved view filter is not inferred here."));
-            details.append(this.element("pre", JSON.stringify({ ...BUILD_INFO, ...this.diagnostics.snapshot,
-                messages: { validation: this.configurationError ?? null, navigation: this.navigationError ?? null }
-            }, null, 2)));
-            details.append(this.button("Inspect bound view", () => {
-                this.diagnosticsOpen = true;
-                void this.viewInspector.inspect(
-                    (entity, options, size) => this.context.webAPI.retrieveMultipleRecords(entity, options, size),
-                    () => this.render());
-            }, "inspect-view", this.viewInspector.status === "loading" || dataset.loading));
-            if (this.viewInspector.status === "loading") details.append(this.message("Reading the bound view definition…"));
-            if (this.viewInspector.error) details.append(this.message(this.viewInspector.error, true));
-            if (this.viewInspector.definition) details.append(this.element("pre", JSON.stringify(this.viewInspector.definition, null, 2)));
-            this.root.append(details);
-        }
         let creationConfigured = true;
         try { guid(this.context.parameters.testResultFormId.raw || ""); }
         catch { creationConfigured = false; }
@@ -320,7 +287,6 @@ export class BilingualLanguageTestsOpenForm implements ComponentFramework.Standa
     public destroy(): void {
         this.destroyed = true;
         this.history.destroy();
-        this.viewInspector.destroy();
         this.root.remove();
     }
 }

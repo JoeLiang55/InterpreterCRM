@@ -29,10 +29,9 @@ export function viewIdentity(dataset: Dataset): string {
     return safe(() => dataset.getTitle()) + " [" + safe(() => dataset.getViewId()) + "]";
 }
 
-export function categoryError(dataset: Dataset, id: string, raw: unknown): string {
+export function categoryError(id: string, raw: unknown): string {
     return "Language " + id + " returned gsic_languagecategory=" + rawText(raw) +
-        " (" + valueType(raw) + "); expected Bilingual (472540000). Bound view: " +
-        viewIdentity(dataset) + ". This is a row-value check, not a check of the saved view filter.";
+    " (" + valueType(raw) + "); expected Bilingual (472540000).";
 }
 
 function filterShape(filter: Filter): unknown {
